@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { db, storage } from "@/firebase/config";
+import { db, storage, auth } from "@/firebase/config";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -16,7 +16,10 @@ const categories = [
   { name: "Other", desc: "Issues not covered above", icon: "❓" },
 ];
 
-export default function StudentDashboard() {
+// 🔥 Keywords for high priority auto-detection
+const highPriorityKeywords = ["fire", "spark", "burn", "short circuit", "electric shock"];
+
+export default function SubmitComplaint() {
   const [formData, setFormData] = useState({
     category: "",
     subject: "",
@@ -37,6 +40,14 @@ export default function StudentDashboard() {
     }
   };
 
+  const detectPriority = (description) => {
+    let text = description.toLowerCase();
+    if (highPriorityKeywords.some((word) => text.includes(word))) {
+      return "High Priority";
+    }
+    return formData.priority;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.category) {
@@ -47,7 +58,6 @@ export default function StudentDashboard() {
     setLoading(true);
     try {
       let fileUrls = [];
-
       if (formData.files.length > 0) {
         for (const file of formData.files) {
           const storageRef = ref(storage, `complaints/${Date.now()}_${file.name}`);
@@ -57,13 +67,17 @@ export default function StudentDashboard() {
         }
       }
 
+      // Auto priority detection
+      const finalPriority = detectPriority(formData.description);
+
       await addDoc(collection(db, "complaints"), {
+        userId: auth.currentUser?.uid || "guest",
         category: formData.category,
         subject: formData.subject,
         property: formData.property,
         location: formData.location,
         description: formData.description,
-        priority: formData.priority,
+        priority: finalPriority,
         fileUrls: fileUrls,
         status: "Pending",
         createdAt: serverTimestamp(),
@@ -90,7 +104,6 @@ export default function StudentDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 px-6 py-8">
       <div className="max-w-4xl mx-auto">
-        {/* Title */}
         <h1 className="text-3xl font-bold text-center text-purple-700 mb-6">
           Submit Complaint
         </h1>
@@ -119,7 +132,7 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Complaint Details Form */}
+        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="bg-white shadow-md rounded-xl p-6 space-y-4"
@@ -128,27 +141,15 @@ export default function StudentDashboard() {
             📝 Complaint Details
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              name="subject"
-              placeholder="Subject"
-              value={formData.subject}
-              onChange={handleChange}
-              required
-              className="p-3 border rounded-lg w-full"
-            />
-            <select
-              name="priority"
-              value={formData.priority}
-              onChange={handleChange}
-              className="p-3 border rounded-lg w-full"
-            >
-              <option>High Priority</option>
-              <option>Medium Priority</option>
-              <option>Low Priority</option>
-            </select>
-          </div>
+          <input
+            type="text"
+            name="subject"
+            placeholder="Subject"
+            value={formData.subject}
+            onChange={handleChange}
+            required
+            className="p-3 border rounded-lg w-full"
+          />
 
           <input
             type="text"
