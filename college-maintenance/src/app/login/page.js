@@ -1,40 +1,76 @@
 "use client";
-import { useState } from "react";
-import { auth, db } from "@/firebase/config";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";  // Added import for getDoc
+
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "@/firebase/config";
+import { doc, getDoc } from "firebase/firestore";
 import Image from "next/image";
 
-export default function Login() {
+const MAINTENANCE_KEY = "gehuservice@04";
+
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState(null);
+  const [key, setKey] = useState("");
+  const [captcha, setCaptcha] = useState("");
+  const [captchaInput, setCaptchaInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  // captcha generator
+  const generateCaptcha = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let text = "";
+    for (let i = 0; i < 6; i++) {
+      text += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setCaptcha(text);
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
+
+  // login handler
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCred.user;
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      const role = userDoc.data()?.role || "student";  // Fallback to student if role not found
+      if (captchaInput !== captcha) {
+        alert("Captcha incorrect!");
+        generateCaptcha();
+        setIsLoading(false);
+        return;
+      }
 
-      if (role === "maintenance") {
-        router.push("/maintenance-dashboard");
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const docSnap = await getDoc(doc(db, "users", userCred.user.uid));
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        setRole(userData.role);
+
+        if (userData.role === "maintenance") {
+          if (key !== MAINTENANCE_KEY) {
+            alert("Invalid Maintenance Key!");
+            setIsLoading(false);
+            return;
+          }
+          router.push("/maintenance-dashboard");
+        } else if (userData.role === "student") {
+          router.push("/student-dashboard");
+        } else if (userData.role === "staff") {
+          router.push("/staff-dashboard");
+        } else {
+          router.push("/");
+        }
       } else {
-        router.push("/student-dashboard");
+        alert("No user data found!");
       }
     } catch (error) {
-      if (error.code === "auth/user-not-found") {
-        alert("User not found. Please sign up.");
-      } else if (error.code === "auth/wrong-password") {
-        alert("Incorrect password.");
-      } else {
-        alert(error.message);
-      }
+      alert(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -42,92 +78,104 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen w-full">
-      {/* Background Image - Now more visible */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/images/college-bg.jpeg"
-          alt="College Background"
-          fill
-          style={{ objectFit: "cover" }}
-          className="opacity-90"
-          priority
-        />
-        <div className="absolute inset-0 bg-red bg-opacity-20"></div>
-      </div>
-      
-      {/* Login Form - Now with better contrast */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+      {/* Fixed Background */}
+      <div
+        className="fixed top-0 left-0 w-full h-full bg-cover bg-center z-0"
+        style={{
+          backgroundImage:
+            "url(https://cdn.rmimgs.com/datarm/enhance/2025-08-23/output/6hq8h0gzmdrj00crtqjanwhj0g.png)",
+        }}
+      ></div>
+
+      {/* Card */}
+      <div className="relative z-10 flex items-center justify-end min-h-screen px-6">
         <form
           onSubmit={handleLogin}
-          className="flex flex-col gap-4 bg-white/90 backdrop-blur-sm p-8 rounded-xl shadow-2xl w-full max-w-md border border-white/20"
+          className="flex flex-col gap-5 bg-white/50 p-8 rounded-lg shadow-2xl w-full max-w-sm border border-gray-200"
         >
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-800 mb-1">Welcome Back</h2>
-            <p className="text-black-600">Login to your account</p>
+          <div className="flex justify-center mb-4">
+            <Image
+              src="https://www.italcoholic.in/wp-content/uploads/2017/01/geu.png"
+              alt="University Logo"
+              width={450}
+              height={80}
+              priority
+            />
           </div>
-          
-          <div className="space-y-4">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-gray-700 font-medium">Email</label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="p-3 rounded-lg bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          {role === "maintenance" && (
+            <input
+              type="password"
+              placeholder="Enter Maintenance Key"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          )}
+
+          <div className="flex items-center gap-3">
+            <div className="bg-gray-200 text-lg font-bold tracking-widest px-4 py-2 rounded">
+              {captcha}
             </div>
-            
-            <div className="flex flex-col gap-2">
-              <label htmlFor="password" className="text-gray-700 font-medium">Password</label>
-              <input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="p-3 rounded-lg bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <button
+              type="button"
+              onClick={generateCaptcha}
+              className="text-sm text-blue-600"
+            >
+              Refresh
+            </button>
           </div>
-          
+          <input
+            type="text"
+            placeholder="Enter Captcha"
+            value={captchaInput}
+            onChange={(e) => setCaptchaInput(e.target.value)}
+            required
+            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
           <button
             type="submit"
             disabled={isLoading}
-            className={`p-3 rounded-lg text-white font-medium transition-colors ${
-              isLoading 
-                ? "bg-blue-600 cursor-not-allowed" 
+            className={`w-full py-3 rounded-lg text-white font-semibold transition-colors ${
+              isLoading
+                ? "bg-blue-500 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Logging in...
-              </span>
-            ) : (
-              "Login"
-            )}
+            {isLoading ? "Processing..." : "LOGIN"}
           </button>
-          
-          <p className="text-center text-gray-600">
-            Don't have an account?{" "}
-            <a 
-              href="/signup" 
-              className="text-blue-600 hover:text-blue-800 underline transition-colors"
+
+          <p className="text-center text-sm text-gray-600">
+            Don’t have an account?{" "}
+            <button
+              type="button"
+              onClick={() => router.push("/signup")}
+              className="text-blue-600 hover:underline"
             >
-              Sign up
-            </a>
+              Sign Up
+            </button>
           </p>
         </form>
       </div>
     </div>
-    // ye delete krna h thik hbhbdhgdfhdvfdfdgvhdbfhdfdhfvhds
   );
-}// jlhgbiuyvg
+}

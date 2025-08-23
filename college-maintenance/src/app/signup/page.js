@@ -10,14 +10,13 @@ import Image from "next/image";
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState("student"); // default
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       await setDoc(doc(db, "users", userCred.user.uid), {
@@ -25,10 +24,10 @@ export default function SignupPage() {
         role,
       });
 
-      alert("Signup successful!");
+      alert("Signup successful! Please login.");
       router.push("/login");
-    } catch (error) {
-      alert(error.message);
+    } catch (err) {
+      alert(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -36,91 +35,74 @@ export default function SignupPage() {
 
   return (
     <div className="relative min-h-screen w-full">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0 h-full">
-        <Image
-          src="/images/college-bg.jpeg"
-          alt="College Background"
-          fill
-          style={{ objectFit: "cover" }}
-          className="opacity-90"
-          priority
-        />
-      </div>
+      {/* Fixed Background */}
+      <div
+        className="fixed top-0 left-0 w-full h-full bg-cover bg-center z-0"
+        style={{
+          backgroundImage:
+            "url(https://cdn.rmimgs.com/datarm/enhance/2025-08-23/output/6hq8h0gzmdrj00crtqjanwhj0g.png)",
+        }}
+      ></div>
 
-      {/* Signup Form */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+      <div className="relative z-10 flex items-center justify-end min-h-screen px-6">
         <form
           onSubmit={handleSignup}
-          className="flex flex-col gap-6 bg-white/90 backdrop-blur-sm p-8 rounded-xl shadow-2xl w-full max-w-md border border-white/20"
+          className="flex flex-col gap-5 bg-white/50 p-8 rounded-lg shadow-2xl w-full max-w-sm border border-gray-200"
         >
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-800 mb-1">Create Account</h2>
-            <p className="text-gray-600">Sign up to continue</p>
+          <div className="flex justify-center mb-4">
+            <Image
+              src="https://www.italcoholic.in/wp-content/uploads/2017/01/geu.png"
+              alt="University Logo"
+              width={450}
+              height={80}
+              priority
+            />
           </div>
 
-          <div className="space-y-4">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-gray-700 font-medium">Email</label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="p-3 rounded-lg bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
-            <div className="flex flex-col gap-2">
-              <label htmlFor="password" className="text-gray-700 font-medium">Password</label>
-              <input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="p-3 rounded-lg bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
-            <div className="flex flex-col gap-2">
-              <label htmlFor="role" className="text-gray-700 font-medium">Select Role</label>
-              <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="p-3 rounded-lg bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="student">Student/Staff</option>
-                <option value="maintenance">Maintenance</option>
-              </select>
-            </div>
-          </div>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="student">Student</option>
+            <option value="staff">Staff</option>
+            <option value="maintenance">Maintenance</option>
+          </select>
 
           <button
             type="submit"
             disabled={isLoading}
-            className={`p-3 rounded-lg text-white font-medium transition-colors ${
-              isLoading
-                ? "bg-blue-600 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+            className={`w-full py-3 rounded-lg text-white font-semibold transition-colors ${
+              isLoading ? "bg-blue-500 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            {isLoading ? "Creating Account..." : "Sign Up"}
+            {isLoading ? "Processing..." : "SIGN UP"}
           </button>
 
-          <p className="text-center text-gray-600">
+          <div className="text-sm text-center text-gray-600">
             Already have an account?{" "}
-            <a
-              href="/login"
-              className="text-blue-600 hover:text-blue-800 underline transition-colors"
-            >
+            <a href="/login" className="text-blue-600 hover:underline">
               Login
             </a>
-          </p>
+          </div>
         </form>
       </div>
     </div>
