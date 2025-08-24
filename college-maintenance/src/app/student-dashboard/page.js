@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { db, storage, auth } from "@/firebase/config";
+import { db, auth } from "@/firebase/config";
 import {
   collection,
   addDoc,
@@ -13,7 +13,6 @@ import {
   where,
   updateDoc,
 } from "firebase/firestore";
-import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -35,14 +34,12 @@ import {
   ChevronDown,
   Settings,
   Key,
-  Image as ImageIcon,
 } from "lucide-react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import autoAssignPriority from "@/utils/autoAssignPriority";
 
-// Complaint Categories
 const categories = [
   { name: "Electrical", icon: "⚡", desc: "Issues related to lights, fuses, wiring, switches, sockets, and electrical failures." },
   { name: "Plumbing", icon: "🚰", desc: "Problems like leaks, broken taps, clogged pipes, water supply issues, or drainage." },
@@ -54,7 +51,6 @@ const categories = [
   { name: "Other", icon: "❓", desc: "Any miscellaneous issue not fitting above categories; describe clearly." },
 ];
 
-// Keywords (your expanded version)
 const keywords = {
   high: [/* your high keywords */],
   medium: [/* your medium keywords */],
@@ -93,8 +89,6 @@ export default function StudentDashboard() {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [passwordChangeError, setPasswordChangeError] = useState("");
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState("");
-  const [selectedImages, setSelectedImages] = useState([]); // Multiple images
-  const [imageLoading, setImageLoading] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -153,79 +147,41 @@ export default function StudentDashboard() {
     return date;
   };
 
-  // Handle Multiple Image Selection (Preview)
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    setSelectedImages(files.map(file => ({
-      file,
-      preview: URL.createObjectURL(file)
-    })));
-  };
-
-  // Converts file to base64
-  const fileToBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]); // only base64 part
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  // --- NO IMAGE UPLOAD LOGIC HERE ---
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setImageLoading(true);
 
     const formData = new FormData(e.target);
 
-    const description = formData.get("description");
-    const priority = autoAssignPriority(description, keywords);
-
-    const complaint = {
+    const complaintData = {
       subject: formData.get("subject"),
-      priority,
       building: formData.get("building"),
       location: formData.get("location"),
-      description,
+      description: formData.get("description"),
       category: activeCategory,
+      priority: autoAssignPriority(formData.get("description"), keywords),
       status: "Pending",
-      createdAt: serverTimestamp(),
+      createdAt: new Date().toISOString(),
       email: userEmail,
-      imageUrls: [],
     };
 
-    // Upload images as base64 to Firebase Storage
     try {
-      for (let i = 0; i < selectedImages.length; i++) {
-        const fileObj = selectedImages[i];
-        const base64String = await fileToBase64(fileObj.file);
-        const fileName = `complaints/${Date.now()}_${i}_${fileObj.file.name}`;
-        const storageRef = ref(storage, fileName);
-        await uploadString(storageRef, base64String, "base64");
-        const downloadURL = await getDownloadURL(storageRef);
-        complaint.imageUrls.push(downloadURL);
-      }
-    } catch (error) {
-      setImageLoading(false);
-      alert("Failed to upload image(s). Please try again.");
-      return;
+      const docRef = await addDoc(collection(db, "complaints"), complaintData);
+
+      const confirmationComplaint = {
+        id: docRef.id,
+        ...complaintData,
+        createdAt: new Date(),
+      };
+
+      setComplaints((prev) => [confirmationComplaint, ...prev]);
+      setConfirmationData(confirmationComplaint);
+
+    } catch (err) {
+      alert("Failed to submit complaint. " + err.message);
     }
 
-    const docRef = await addDoc(collection(db, "complaints"), complaint);
-
-    const confirmationComplaint = {
-      id: docRef.id,
-      ...complaint,
-      createdAt: new Date(),
-    };
-
-    setComplaints((prev) => [
-      confirmationComplaint,
-      ...prev,
-    ]);
-
-    setConfirmationData(confirmationComplaint);
-
-    setImageLoading(false);
-    setSelectedImages([]);
     e.target.reset();
     setActiveCategory(null);
   };
@@ -423,7 +379,6 @@ export default function StudentDashboard() {
               <form
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 gap-7 max-w-4xl mx-auto"
-                encType="multipart/form-data"
               >
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-4">
                   {categories.map((cat) => (
@@ -449,35 +404,7 @@ export default function StudentDashboard() {
                   ))}
                 </div>
 
-                {/* Image Upload Section (multiple images) */}
-                <div className="flex flex-col items-center gap-2 mb-2">
-                  <label htmlFor="image" className="flex items-center gap-2 font-semibold text-blue-700 cursor-pointer">
-                    <ImageIcon className="w-5 h-5" />
-                    Upload Image(s) (optional)
-                  </label>
-                  <Input
-                    type="file"
-                    name="image"
-                    id="image"
-                    accept="image/*"
-                    className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150"
-                    multiple
-                    onChange={handleImageChange}
-                  />
-                  {selectedImages.length > 0 && (
-                    <div className="mt-2 flex gap-2 flex-wrap justify-center">
-                      {selectedImages.map((img, idx) => (
-                        <img
-                          key={idx}
-                          src={img.preview}
-                          alt={`Preview ${idx + 1}`}
-                          className="max-h-36 rounded-xl shadow-lg border border-blue-100"
-                          style={{ objectFit: "contain", background: "#f5faff" }}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
+                {/* -- IMAGE UPLOAD OPTION REMOVED -- */}
 
                 <Input name="subject" placeholder="Subject" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
                 <Input name="building" placeholder="Property/Building" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
@@ -490,10 +417,9 @@ export default function StudentDashboard() {
                 />
                 <Button
                   type="submit"
-                  className={`w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:from-blue-700 hover:to-blue-500 hover:scale-105 font-bold text-lg rounded-2xl shadow-lg transition-all duration-150 ${imageLoading ? "opacity-60 cursor-not-allowed" : ""}`}
-                  disabled={imageLoading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:from-blue-700 hover:to-blue-500 hover:scale-105 font-bold text-lg rounded-2xl shadow-lg transition-all duration-150"
                 >
-                  {imageLoading ? "Submitting..." : "Submit Complaint"}
+                  Submit Complaint
                 </Button>
               </form>
             </TabsContent>
@@ -553,19 +479,7 @@ export default function StudentDashboard() {
                         </Button>
                       </div>
                     </div>
-                    {comp.imageUrls && comp.imageUrls.length > 0 && (
-                      <div className="mt-3 flex gap-2 flex-wrap justify-end">
-                        {comp.imageUrls.map((url, idx) => (
-                          <img
-                            key={idx}
-                            src={url}
-                            alt={`Complaint ${idx + 1}`}
-                            className="rounded-xl max-h-28 w-auto border border-blue-100 shadow"
-                            style={{ objectFit: "contain", background: "#f5faff" }}
-                          />
-                        ))}
-                      </div>
-                    )}
+                    {/* IMAGE PREVIEW REMOVED */}
                     <Button
                       variant="outline"
                       className="mt-3 text-blue-600 border-blue-600 rounded-xl hover:bg-blue-100 hover:scale-105 transition-all duration-150 font-semibold shadow"
@@ -627,19 +541,7 @@ export default function StudentDashboard() {
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        {comp.imageUrls && comp.imageUrls.length > 0 && (
-                          <div className="flex gap-2 flex-wrap">
-                            {comp.imageUrls.map((url, idx) => (
-                              <img
-                                key={idx}
-                                src={url}
-                                alt={`Complaint ${idx + 1}`}
-                                className="rounded-xl max-h-28 w-auto border border-violet-100 shadow"
-                                style={{ objectFit: "contain", background: "#f5faff" }}
-                              />
-                            ))}
-                          </div>
-                        )}
+                        {/* IMAGE PREVIEW REMOVED */}
                       </div>
                     </div>
                     <Button
@@ -703,19 +605,7 @@ export default function StudentDashboard() {
               <Clock className="w-4 h-4" /> Submitted at:{" "}
               {timeAgo(formatDateTime(confirmationData.createdAt))}
             </p>
-            {confirmationData.imageUrls && confirmationData.imageUrls.length > 0 && (
-              <div className="mt-3 flex gap-2 flex-wrap justify-center">
-                {confirmationData.imageUrls.map((url, idx) => (
-                  <img
-                    key={idx}
-                    src={url}
-                    alt={`Complaint image ${idx + 1}`}
-                    className="rounded-xl max-h-40 w-auto border border-green-100 shadow"
-                    style={{ objectFit: "contain", background: "#f5faff" }}
-                  />
-                ))}
-              </div>
-            )}
+            {/* IMAGE PREVIEW REMOVED */}
           </Card>
         </div>
       )}
@@ -806,19 +696,7 @@ export default function StudentDashboard() {
               <Clock className="w-4 h-4" /> Submitted at:{" "}
               {timeAgo(formatDateTime(deleteData.createdAt))}
             </p>
-            {deleteData.imageUrls && deleteData.imageUrls.length > 0 && (
-              <div className="mt-3 flex gap-2 flex-wrap justify-center">
-                {deleteData.imageUrls.map((url, idx) => (
-                  <img
-                    key={idx}
-                    src={url}
-                    alt={`Complaint image ${idx + 1}`}
-                    className="rounded-xl max-h-40 w-auto border border-red-100 shadow"
-                    style={{ objectFit: "contain", background: "#f5faff" }}
-                  />
-                ))}
-              </div>
-            )}
+            {/* IMAGE PREVIEW REMOVED */}
           </Card>
         </div>
       )}
@@ -922,19 +800,7 @@ export default function StudentDashboard() {
                 </span>
               </div>
             )}
-            {modalData.imageUrls && modalData.imageUrls.length > 0 && (
-              <div className="mt-3 flex gap-2 flex-wrap justify-center">
-                {modalData.imageUrls.map((url, idx) => (
-                  <img
-                    key={idx}
-                    src={url}
-                    alt={`Complaint image ${idx + 1}`}
-                    className="rounded-xl max-h-40 w-auto border border-blue-100 shadow"
-                    style={{ objectFit: "contain", background: "#f5faff" }}
-                  />
-                ))}
-              </div>
-            )}
+            {/* IMAGE PREVIEW REMOVED */}
           </Card>
         </div>
       )}
