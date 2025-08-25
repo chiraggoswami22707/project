@@ -246,11 +246,11 @@ export default function StudentDashboard() {
       <div className="flex justify-between items-center mb-10 w-full max-w-6xl bg-white p-4 rounded-2xl shadow-3xl" style={{
         boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06)"
       }}>
-        <h1 className="text-3xl font-extrabold text-blue-700 drop-shadow-2xl" style={{
+        <h1 className="text-3xl font-extrabold text-gray-800 drop-shadow-2xl" style={{
           letterSpacing: "1px",
           textShadow: "2px 2px 8px rgba(30,64,175,0.08)"
         }}>
-          Graphic Era Hill University – Student Portal
+          Graphic Era Hill University – Student / Staff Portal
         </h1>
         <div className="relative">
           <div
