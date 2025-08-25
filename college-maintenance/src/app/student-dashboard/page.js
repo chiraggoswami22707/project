@@ -40,6 +40,32 @@ import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import autoAssignPriority from "@/utils/autoAssignPriority";
 
+// Utility: Format date+time as "24 Aug 2025, 11:30 AM"
+function formatDateTimeFull(dateInput) {
+  if (!dateInput) return "N/A";
+  let date;
+  if (typeof dateInput === "object" && dateInput !== null) {
+    if (dateInput instanceof Date) {
+      date = dateInput;
+    } else if (dateInput.toDate) {
+      date = dateInput.toDate();
+    } else if (dateInput.seconds !== undefined) {
+      date = new Date(dateInput.seconds * 1000);
+    }
+  } else {
+    date = new Date(dateInput);
+  }
+  if (!date || isNaN(date.getTime())) return "N/A";
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  }).replace(",", "");
+}
+
 const categories = [
   { name: "Electrical", icon: "⚡", desc: "Issues related to lights, fuses, wiring, switches, sockets, and electrical failures." },
   { name: "Plumbing", icon: "🚰", desc: "Problems like leaks, broken taps, clogged pipes, water supply issues, or drainage." },
@@ -56,19 +82,6 @@ const keywords = {
   medium: [/* your medium keywords */],
   low: [/* your low keywords */],
 };
-
-function timeAgo(date) {
-  if (!date) return "";
-  const now = new Date();
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-  const days = Math.floor(hours / 24);
-  return `${days} day${days > 1 ? "s" : ""} ago`;
-}
 
 const notifyMaintenanceTeam = async (complaint) => {
   console.log("Maintenance notified:", complaint);
@@ -128,26 +141,6 @@ export default function StudentDashboard() {
     };
     fetchComplaints();
   }, [userEmail, confirmationData, deleteData, reopenModal]);
-
-  const formatDateTime = (timestamp) => {
-    if (!timestamp) return "N/A";
-    let date;
-    if (typeof timestamp === "object" && timestamp !== null) {
-      if (timestamp instanceof Date) {
-        date = timestamp;
-      } else if (timestamp.toDate) {
-        date = timestamp.toDate();
-      } else if (timestamp.seconds && timestamp.nanoseconds) {
-        date = new Date(timestamp.seconds * 1000);
-      }
-    } else {
-      date = new Date(timestamp);
-    }
-    if (!date || isNaN(date.getTime())) return "N/A";
-    return date;
-  };
-
-  // --- NO IMAGE UPLOAD LOGIC HERE ---
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -247,7 +240,6 @@ export default function StudentDashboard() {
     }
   };
 
-  // --- UI ---
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-blue-100 to-white p-6">
       {/* Navbar */}
@@ -258,7 +250,7 @@ export default function StudentDashboard() {
           letterSpacing: "1px",
           textShadow: "2px 2px 8px rgba(30,64,175,0.08)"
         }}>
-          Grafigrah Hill University – Student Portal
+          Graphic Era Hill University – Student Portal
         </h1>
         <div className="relative">
           <div
@@ -403,9 +395,6 @@ export default function StudentDashboard() {
                     </Card>
                   ))}
                 </div>
-
-                {/* -- IMAGE UPLOAD OPTION REMOVED -- */}
-
                 <Input name="subject" placeholder="Subject" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
                 <Input name="building" placeholder="Property/Building" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
                 <Input name="location" placeholder="Specific Location" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
@@ -423,7 +412,6 @@ export default function StudentDashboard() {
                 </Button>
               </form>
             </TabsContent>
-
             {/* Complaint List */}
             <TabsContent value="list" className="w-full">
               <div className="max-h-[500px] overflow-y-auto space-y-6">
@@ -440,7 +428,7 @@ export default function StudentDashboard() {
                         <div className="flex items-center gap-4 mt-2 text-gray-500 text-sm font-medium">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />{" "}
-                            {timeAgo(formatDateTime(comp.createdAt))}
+                            {formatDateTimeFull(comp.createdAt)}
                           </span>
                           <span className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" /> {comp.location}
@@ -479,7 +467,6 @@ export default function StudentDashboard() {
                         </Button>
                       </div>
                     </div>
-                    {/* IMAGE PREVIEW REMOVED */}
                     <Button
                       variant="outline"
                       className="mt-3 text-blue-600 border-blue-600 rounded-xl hover:bg-blue-100 hover:scale-105 transition-all duration-150 font-semibold shadow"
@@ -491,7 +478,6 @@ export default function StudentDashboard() {
                 ))}
               </div>
             </TabsContent>
-
             {/* Reopened Complaints Section */}
             <TabsContent value="reopened" className="w-full">
               <div className="max-h-[500px] overflow-y-auto space-y-6">
@@ -511,11 +497,11 @@ export default function StudentDashboard() {
                         <div className="flex items-center gap-4 mt-2 text-gray-500 text-sm font-medium">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />{" "}
-                            {timeAgo(formatDateTime(comp.createdAt))} (Original)
+                            {formatDateTimeFull(comp.createdAt)} (Original)
                           </span>
                           <span className="flex items-center gap-1">
                             <Repeat className="w-4 h-4" />{" "}
-                            {timeAgo(formatDateTime(comp.reopenedAt))} (Reopened)
+                            {formatDateTimeFull(comp.reopenedAt)} (Reopened)
                           </span>
                           <span className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" /> {comp.location}
@@ -541,7 +527,6 @@ export default function StudentDashboard() {
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        {/* IMAGE PREVIEW REMOVED */}
                       </div>
                     </div>
                     <Button
@@ -558,7 +543,6 @@ export default function StudentDashboard() {
           </Tabs>
         </Card>
       </div>
-
       {/* Complaint Submit Confirmation Modal */}
       {confirmationData && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
@@ -603,13 +587,70 @@ export default function StudentDashboard() {
             </p>
             <p className="mb-2 text-gray-500 flex items-center gap-1">
               <Clock className="w-4 h-4" /> Submitted at:{" "}
-              {timeAgo(formatDateTime(confirmationData.createdAt))}
+              {formatDateTimeFull(confirmationData.createdAt)}
             </p>
-            {/* IMAGE PREVIEW REMOVED */}
           </Card>
         </div>
       )}
-
+      {/* Complaint Details Modal */}
+      {modalData && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+          <Card className="w-full max-w-lg p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
+            <X
+              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
+              onClick={() => setModalData(null)}
+            />
+            <h2 className="text-2xl font-extrabold mb-4">{modalData.subject}</h2>
+            <p className="mb-2">
+              <strong>Category:</strong> {modalData.category}
+            </p>
+            <p className="mb-2">
+              <strong>Priority:</strong> {modalData.priority}
+            </p>
+            <p className="mb-2">
+              <strong>Building:</strong> {modalData.building}
+            </p>
+            <p className="mb-2">
+              <strong>Location:</strong> {modalData.location}
+            </p>
+            <p className="mb-2">
+              <strong>Status:</strong>{" "}
+              <span
+                className={`px-2 py-1 rounded-full ${modalData.status === "Resolved"
+                  ? "bg-green-100 text-green-700"
+                  : modalData.status === "In Progress"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : modalData.status === "Reopened"
+                      ? "bg-violet-100 text-violet-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+              >
+                {modalData.status}
+              </span>
+            </p>
+            <p className="mb-2">
+              <strong>Description:</strong> {modalData.description}
+            </p>
+            <p className="mb-2 text-gray-500 flex items-center gap-1">
+              <Clock className="w-4 h-4" /> Submitted at:{" "}
+              {formatDateTimeFull(modalData.createdAt)}
+            </p>
+            {modalData.reopenedAt && (
+              <p className="mb-2 text-violet-700 flex items-center gap-2">
+                <Repeat className="w-4 h-4" /> Reopened at: {formatDateTimeFull(modalData.reopenedAt)}
+              </p>
+            )}
+            {modalData.reopenedNote && (
+              <div className="mb-2 text-violet-700 flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                <span>
+                  <strong>Reopen Reason:</strong> {modalData.reopenedNote}
+                </span>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
       {/* Complaint Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
@@ -649,7 +690,6 @@ export default function StudentDashboard() {
           </Card>
         </div>
       )}
-
       {/* Complaint Delete Notification Modal */}
       {deleteData && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
@@ -694,13 +734,11 @@ export default function StudentDashboard() {
             </p>
             <p className="mb-2 text-gray-500 flex items-center gap-1">
               <Clock className="w-4 h-4" /> Submitted at:{" "}
-              {timeAgo(formatDateTime(deleteData.createdAt))}
+              {formatDateTimeFull(deleteData.createdAt)}
             </p>
-            {/* IMAGE PREVIEW REMOVED */}
           </Card>
         </div>
       )}
-
       {/* Reopen Modal */}
       {reopenModal.open && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
@@ -743,7 +781,6 @@ export default function StudentDashboard() {
           </Card>
         </div>
       )}
-
       {/* Complaint Details Modal */}
       {modalData && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
@@ -785,11 +822,11 @@ export default function StudentDashboard() {
             </p>
             <p className="mb-2 text-gray-500 flex items-center gap-1">
               <Clock className="w-4 h-4" /> Submitted at:{" "}
-              {timeAgo(formatDateTime(modalData.createdAt))}
+              {formatDateTimeFull(modalData.createdAt)}
             </p>
             {modalData.reopenedAt && (
               <p className="mb-2 text-violet-700 flex items-center gap-2">
-                <Repeat className="w-4 h-4" /> Reopened at: {timeAgo(formatDateTime(modalData.reopenedAt))}
+                <Repeat className="w-4 h-4" /> Reopened at: {formatDateTimeFull(modalData.reopenedAt)}
               </p>
             )}
             {modalData.reopenedNote && (
@@ -800,7 +837,6 @@ export default function StudentDashboard() {
                 </span>
               </div>
             )}
-            {/* IMAGE PREVIEW REMOVED */}
           </Card>
         </div>
       )}

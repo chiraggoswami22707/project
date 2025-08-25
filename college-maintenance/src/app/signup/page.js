@@ -36,13 +36,16 @@ export default function SignupPage() {
   return (
     <div className="relative min-h-screen w-full">
       {/* Fixed Background */}
-      <div
-        className="fixed top-0 left-0 w-full h-full bg-cover bg-center z-0"
-        style={{
-          backgroundImage:
-            "url(https://cdn.rmimgs.com/datarm/enhance/2025-08-23/output/6hq8h0gzmdrj00crtqjanwhj0g.png)",
-        }}
-      ></div>
+      <div className="absolute inset-0 -z-10">
+        <Image
+          src="/geu-campus.jpg" // ✅ Must be inside /public folder
+          alt="Background"
+          fill
+          style={{ objectFit: "cover" }}
+          priority
+        />
+        <div className="absolute inset-0 bg-black/20" /> {/* dark overlay */}
+      </div>
 
       <div className="relative z-10 flex items-center justify-end min-h-screen px-6">
         <form
@@ -90,9 +93,8 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-3 rounded-lg text-white font-semibold transition-colors ${
-              isLoading ? "bg-blue-500 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-            }`}
+            className={`w-full py-3 rounded-lg text-white font-semibold transition-colors ${isLoading ? "bg-blue-500 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+              }`}
           >
             {isLoading ? "Processing..." : "SIGN UP"}
           </button>

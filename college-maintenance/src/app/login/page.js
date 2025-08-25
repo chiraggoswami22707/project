@@ -79,16 +79,19 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen w-full">
       {/* Fixed Background */}
-      <div
-        className="fixed top-0 left-0 w-full h-full bg-cover bg-center z-0"
-        style={{
-          backgroundImage:
-            "url(https://cdn.rmimgs.com/datarm/enhance/2025-08-23/output/6hq8h0gzmdrj00crtqjanwhj0g.png)",
-        }}
-      ></div>
+      <div className="absolute inset-0 -z-10">
+        <Image
+          src="/geu-campus.jpg" // ✅ Must be inside /public folder
+          alt="Background"
+          fill
+          style={{ objectFit: "cover" }}
+          priority
+        />
+        <div className="absolute inset-0 bg-black/20" /> {/* dark overlay */}
+      </div>
 
-      {/* Card */}
-      <div className="relative z-10 flex items-center justify-end min-h-screen px-6">
+      {/* Login Card */}
+      <div className="flex items-center justify-end min-h-screen px-6">
         <form
           onSubmit={handleLogin}
           className="flex flex-col gap-5 bg-white/50 p-8 rounded-lg shadow-2xl w-full max-w-sm border border-gray-200"
@@ -155,11 +158,10 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-3 rounded-lg text-white font-semibold transition-colors ${
-              isLoading
+            className={`w-full py-3 rounded-lg text-white font-semibold transition-colors ${isLoading
                 ? "bg-blue-500 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
-            }`}
+              }`}
           >
             {isLoading ? "Processing..." : "LOGIN"}
           </button>
@@ -178,5 +180,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-} // comment
-// comment
+}
