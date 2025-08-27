@@ -36,9 +36,10 @@ import {
   Key,
 } from "lucide-react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import Tippy from "@tippyjs/react";
-import "tippy.js/dist/tippy.css";
 import autoAssignPriority from "@/utils/autoAssignPriority";
+import "tippy.js/dist/tippy.css";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 // Utility: Format date+time as "24 Aug 2025, 11:30 AM"
 function formatDateTimeFull(dateInput) {
@@ -52,7 +53,8 @@ function formatDateTimeFull(dateInput) {
     } else if (dateInput.seconds !== undefined) {
       date = new Date(dateInput.seconds * 1000);
     }
-  } else {
+  }
+  else {
     date = new Date(dateInput);
   }
   if (!date || isNaN(date.getTime())) return "N/A";
@@ -62,7 +64,7 @@ function formatDateTimeFull(dateInput) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: true
+    hour12: true,
   }).replace(",", "");
 }
 
@@ -72,18 +74,25 @@ const categories = [
   { name: "Cleaning", icon: "🧹", desc: "Cleaning requests for rooms, halls, bathrooms, or any common area." },
   { name: "Security", icon: "🛡️", desc: "Concerns related to guards, locks, lost keys, cameras, unauthorized access, safety." },
   { name: "Internet", icon: "🌐", desc: "Connectivity issues with Wi-Fi, LAN, internet speed, access, or technical problems." },
-  { name: "Parking", icon: "🅿️", desc: "Parking slot allocation, vehicle management, unauthorized parking, lot maintenance." },
+  { name: "Parking", icon: "🚗", desc: "Parking slot allocation, vehicle management, unauthorized parking, lot maintenance." },
   { name: "Vehicle", icon: "🚗", desc: "Campus vehicle maintenance, breakdowns, repairs, servicing, transport-related issues." },
   { name: "Other", icon: "❓", desc: "Any miscellaneous issue not fitting above categories; describe clearly." },
 ];
 
+// Predefined time slots with AM/PM format
+const timeSlots = [
+  "9-10 AM", "10-11 AM", "11-12 AM", "12-1 PM", "1-2 PM", "2-3 PM", 
+  "3-4 PM", "4-5 PM", "5-6 PM", "6-7 PM", "7-8 PM"
+];
+
 const keywords = {
-  high: [/* your high keywords */],
-  medium: [/* your medium keywords */],
-  low: [/* your low keywords */],
+  high: [],
+  medium: [],
+  low: [],
 };
 
 const notifyMaintenanceTeam = async (complaint) => {
+  // Placeholder for notification logic
   console.log("Maintenance notified:", complaint);
 };
 
@@ -102,17 +111,31 @@ export default function StudentDashboard() {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [passwordChangeError, setPasswordChangeError] = useState("");
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState("");
+  const [userRole, setUserRole] = useState(""); // "student" or "staff"
+  const [slotDate, setSlotDate] = useState(null);
+  const [slotTime, setSlotTime] = useState("");
+  const [allBookedSlots, setAllBookedSlots] = useState([]);
+  const [timeSlotError, setTimeSlotError] = useState("");
 
+  // AUTH: set user email, userName, and role (student/staff)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUserEmail(user.email);
         setUserName(user.displayName || user.email?.split("@")[0]);
+        if (user.email.endsWith("@gmail.com")) {
+          setUserRole("student");
+        } else if (user.email.endsWith("@staff.com")) {
+          setUserRole("staff");
+        } else {
+          setUserRole(""); // not allowed here
+        }
       } else setUserEmail("");
     });
     return () => unsubscribe();
   }, []);
 
+  // Fetch complaints by this user
   useEffect(() => {
     if (!userEmail) return;
     const fetchComplaints = async () => {
@@ -136,15 +159,53 @@ export default function StudentDashboard() {
               : complaintData.reopenedAt || null,
         };
       });
-      setComplaints(data.filter((c) => c.status !== "Reopened"));
-      setReopenedComplaints(data.filter((c) => c.status === "Reopened"));
+      
+      // Sort complaints by creation date (most recent first)
+      const sortedData = data.sort((a, b) => {
+        const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+        const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+        return dateB - dateA; // Descending order (newest first)
+      });
+      
+      setComplaints(sortedData.filter((c) => c.status !== "Reopened"));
+      
+      // Sort reopened complaints by reopening date (most recent first)
+      const sortedReopened = sortedData
+        .filter((c) => c.status === "Reopened")
+        .sort((a, b) => {
+          const dateA = a.reopenedAt instanceof Date ? a.reopenedAt : new Date(a.reopenedAt);
+          const dateB = b.reopenedAt instanceof Date ? b.reopenedAt : new Date(b.reopenedAt);
+          return dateB - dateA; // Descending order (newest first)
+        });
+      
+      setReopenedComplaints(sortedReopened);
     };
     fetchComplaints();
   }, [userEmail, confirmationData, deleteData, reopenModal]);
 
+  // Fetch all booked slots for students
+  useEffect(() => {
+    if (userRole !== "student") return;
+    const fetchAllSlots = async () => {
+      const q = query(collection(db, "complaints"));
+      const querySnapshot = await getDocs(q);
+      const slots = querySnapshot.docs
+        .map((doc) => doc.data().timeSlot)
+        .filter(Boolean)
+        .map((ts) => {
+          if (!ts) return null;
+          const [date, time] = ts.split(" ");
+          return { date, time };
+        });
+      setAllBookedSlots(slots.filter(Boolean));
+    };
+    fetchAllSlots();
+  }, [userRole, confirmationData]);
+
+  // Complaint submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setTimeSlotError("");
     const formData = new FormData(e.target);
 
     const complaintData = {
@@ -159,6 +220,27 @@ export default function StudentDashboard() {
       email: userEmail,
     };
 
+    // Student time slot logic
+    if (userRole === "student") {
+      if (!slotDate || !slotTime) {
+        setTimeSlotError("Please select date and time for your slot.");
+        return;
+      }
+      const slotDateStr = slotDate.toISOString().slice(0, 10); // "YYYY-MM-DD"
+      const slotValue = `${slotDateStr} ${slotTime}`;
+      // Check if slot is already booked
+      const q = query(collection(db, "complaints"));
+      const querySnapshot = await getDocs(q);
+      const booked = querySnapshot.docs
+        .map((doc) => doc.data().timeSlot)
+        .filter(Boolean);
+      if (booked.includes(slotValue)) {
+        setTimeSlotError("This slot is fully booked, please choose another one.");
+        return;
+      }
+      complaintData.timeSlot = slotValue;
+    }
+
     try {
       const docRef = await addDoc(collection(db, "complaints"), complaintData);
 
@@ -170,15 +252,17 @@ export default function StudentDashboard() {
 
       setComplaints((prev) => [confirmationComplaint, ...prev]);
       setConfirmationData(confirmationComplaint);
-
     } catch (err) {
       alert("Failed to submit complaint. " + err.message);
     }
 
     e.target.reset();
     setActiveCategory(null);
+    setSlotDate(null);
+    setSlotTime("");
   };
 
+  // Delete handling
   const handleDelete = async (comp) => {
     setDeleteConfirm(comp);
   };
@@ -240,17 +324,23 @@ export default function StudentDashboard() {
     }
   };
 
+  // AUTH GUARD
+  if (userRole !== "student" && userRole !== "staff" && userRole !== "") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="p-8 shadow-3xl text-center text-xl text-red-700 font-bold bg-white/80 rounded-2xl">
+          Access Denied. Only Student and Staff can use this dashboard.
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-blue-100 to-white p-6">
       {/* Navbar */}
-      <div className="flex justify-between items-center mb-10 w-full max-w-6xl bg-white p-4 rounded-2xl shadow-3xl" style={{
-        boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06)"
-      }}>
-        <h1 className="text-3xl font-extrabold text-blue-700 drop-shadow-2xl" style={{
-          letterSpacing: "1px",
-          textShadow: "2px 2px 8px rgba(30,64,175,0.08)"
-        }}>
-          Graphic Era Hill University – Student Portal
+      <div className="flex justify-between items-center mb-10 w-full max-w-6xl bg-white p-4 rounded-2xl shadow-3xl">
+        <h1 className="text-3xl font-extrabold text-blue-700 drop-shadow-2xl">
+          Graphic Era Hill University – Student/Staff Dashboard
         </h1>
         <div className="relative">
           <div
@@ -335,24 +425,20 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* TABS IN CENTER */}
+      {/* TABS */}
       <div className="flex flex-col items-center justify-center w-full" style={{ minHeight: "calc(100vh - 200px)" }}>
-        <Card className="p-8 shadow-3xl rounded-3xl w-full max-w-5xl mx-auto flex justify-center bg-gradient-to-b from-white via-blue-50 to-white" style={{
-          boxShadow: "0 12px 48px rgba(30,64,175,0.13), 0 4px 8px rgba(30,64,175,0.09)"
-        }}>
+        <Card className="p-8 shadow-3xl rounded-3xl w-full max-w-5xl mx-auto flex justify-center bg-gradient-to-b from-white via-blue-50 to-white">
           <Tabs defaultValue="submit" className="w-full flex flex-col items-center">
-            <TabsList className="flex justify-center mb-8 bg-blue-100 rounded-2xl p-2 shadow-lg" style={{ boxShadow: "0 2px 12px rgba(30,64,175,0.10)" }}>
+            <TabsList className="flex justify-center mb-8 bg-blue-100 rounded-2xl p-2 shadow-lg">
               <TabsTrigger
                 value="submit"
                 className="flex items-center gap-2 px-7 py-4 rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white text-lg font-bold transition shadow hover:scale-110 hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-400"
-                style={{ boxShadow: "0 2px 8px rgba(30,64,175,0.10)" }}
               >
                 <FileText className="w-5 h-5" /> Submit Complaint
               </TabsTrigger>
               <TabsTrigger
                 value="list"
                 className="flex items-center gap-2 px-7 py-4 rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white text-lg font-bold transition shadow hover:scale-110 hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-400"
-                style={{ boxShadow: "0 2px 8px rgba(30,64,175,0.10)" }}
               >
                 <ClipboardList className="w-5 h-5" /> My Complaints
                 <span className="ml-2 bg-blue-200 text-blue-800 px-2 rounded-full text-sm font-bold shadow-inner">{complaints.length}</span>
@@ -360,7 +446,6 @@ export default function StudentDashboard() {
               <TabsTrigger
                 value="reopened"
                 className="flex items-center gap-2 px-7 py-4 rounded-xl data-[state=active]:bg-violet-600 data-[state=active]:text-white text-lg font-bold transition shadow hover:scale-110 hover:bg-gradient-to-r hover:from-violet-500 hover:to-violet-400"
-                style={{ boxShadow: "0 2px 8px rgba(124,58,237,0.10)" }}
               >
                 <Repeat className="w-5 h-5" /> Reopened Complaints
                 <span className="ml-2 bg-violet-200 text-violet-800 px-2 rounded-full text-sm font-bold shadow-inner">{reopenedComplaints.length}</span>
@@ -404,6 +489,52 @@ export default function StudentDashboard() {
                   required
                   className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150"
                 />
+                {/* Student time slot PICKER (Date + Time) */}
+                {userRole === "student" && (
+                  <div>
+                    <label className="block text-blue-700 font-bold mb-2">Select Date</label>
+                    <DatePicker
+                      selected={slotDate}
+                      onChange={(date) => {
+                        setSlotDate(date);
+                        setTimeSlotError("");
+                      }}
+                      minDate={new Date()}
+                      className="w-full p-3 rounded-xl border border-gray-300 shadow-inner"
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="Pick a date"
+                      required
+                    />
+                    <label className="block text-blue-700 font-bold mb-2 mt-3">Select Time</label>
+                    <select
+                      value={slotTime}
+                      onChange={e => {
+                        setSlotTime(e.target.value);
+                        setTimeSlotError("");
+                      }}
+                      className="w-full p-3 rounded-xl border border-gray-300 shadow-inner"
+                      required
+                    >
+                      <option value="">Select a time slot</option>
+                      {timeSlots.map(slot => (
+                        <option key={slot} value={slot}>{slot}</option>
+                      ))}
+                    </select>
+                    {timeSlotError && (
+                      <div className="text-red-600 text-sm font-semibold mt-1">{timeSlotError}</div>
+                    )}
+                    {/* Slot availability info */}
+                    {slotDate && slotTime && allBookedSlots.some(
+                      slot =>
+                        slot.date === slotDate.toISOString().slice(0, 10) &&
+                        slot.time === slotTime
+                    ) && (
+                        <div className="text-red-600 text-sm font-semibold mt-1">
+                          This time slot is already booked. Please select another.
+                        </div>
+                      )}
+                  </div>
+                )}
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:from-blue-700 hover:to-blue-500 hover:scale-105 font-bold text-lg rounded-2xl shadow-lg transition-all duration-150"
@@ -412,14 +543,13 @@ export default function StudentDashboard() {
                 </Button>
               </form>
             </TabsContent>
-            {/* Complaint List */}
+            {/* My Complaints List */}
             <TabsContent value="list" className="w-full">
               <div className="max-h-[500px] overflow-y-auto space-y-6">
                 {complaints.map((comp) => (
                   <Card
                     key={comp.id}
                     className="p-5 shadow-3xl rounded-2xl hover:shadow-3xl hover:scale-[1.04] transition-transform duration-150 bg-gradient-to-br from-white via-blue-50 to-white border-2 border-gray-100"
-                    style={{ boxShadow: "0 2px 16px rgba(30,64,175,0.12)" }}
                   >
                     <div className="flex justify-between items-start">
                       <div>
@@ -427,13 +557,20 @@ export default function StudentDashboard() {
                         <p className="text-sm text-gray-600 mb-1">{comp.description}</p>
                         <div className="flex items-center gap-4 mt-2 text-gray-500 text-sm font-medium">
                           <span className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />{" "}
-                            {formatDateTimeFull(comp.createdAt)}
+                            <Calendar className="w-4 h-4" /> {formatDateTimeFull(comp.createdAt)}
                           </span>
                           <span className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" /> {comp.location}
                           </span>
                         </div>
+                        {comp.timeSlot && (
+                          <div className="flex items-center gap-1 text-blue-700 font-semibold text-sm mt-1">
+                            <Clock className="w-4 h-4" /> Slot: {comp.timeSlot}
+                          </div>
+                        )}
+                        <span className="text-sm font-medium">
+                          {userRole === "staff" ? "Staff" : "Student"}
+                        </span>
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <span
@@ -478,7 +615,7 @@ export default function StudentDashboard() {
                 ))}
               </div>
             </TabsContent>
-            {/* Reopened Complaints Section */}
+            {/* Reopened Complaints */}
             <TabsContent value="reopened" className="w-full">
               <div className="max-h-[500px] overflow-y-auto space-y-6">
                 {reopenedComplaints.length === 0 && (
@@ -488,7 +625,6 @@ export default function StudentDashboard() {
                   <Card
                     key={comp.id}
                     className="p-5 shadow-3xl border-violet-600 border-2 rounded-2xl hover:shadow-3xl hover:scale-[1.04] transition-transform duration-150 bg-gradient-to-br from-white via-violet-50 to-white"
-                    style={{ boxShadow: "0 2px 16px rgba(124,58,237,0.14)" }}
                   >
                     <div className="flex justify-between items-start">
                       <div>
@@ -496,12 +632,10 @@ export default function StudentDashboard() {
                         <p className="text-sm text-gray-600 mb-1">{comp.description}</p>
                         <div className="flex items-center gap-4 mt-2 text-gray-500 text-sm font-medium">
                           <span className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />{" "}
-                            {formatDateTimeFull(comp.createdAt)} (Original)
+                            <Calendar className="w-4 h-4" /> {formatDateTimeFull(comp.createdAt)} (Original)
                           </span>
                           <span className="flex items-center gap-1">
-                            <Repeat className="w-4 h-4" />{" "}
-                            {formatDateTimeFull(comp.reopenedAt)} (Reopened)
+                            <Repeat className="w-4 h-4" /> {formatDateTimeFull(comp.reopenedAt)} (Reopened)
                           </span>
                           <span className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" /> {comp.location}
@@ -525,6 +659,11 @@ export default function StudentDashboard() {
                             </span>
                           </div>
                         )}
+                        {comp.timeSlot && (
+                          <div className="flex items-center gap-1 text-blue-700 font-semibold text-sm mt-1">
+                            <Clock className="w-4 h-4" /> Slot: {comp.timeSlot}
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col items-end gap-2">
                       </div>
@@ -543,7 +682,67 @@ export default function StudentDashboard() {
           </Tabs>
         </Card>
       </div>
-      {/* Complaint Submit Confirmation Modal */}
+      {/* Complaint Details Modal */}
+      {modalData && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+          <Card className="w-full max-w-lg p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
+            <X
+              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
+              onClick={() => setModalData(null)}
+            />
+            <h2 className="text-2xl font-extrabold mb-4 text-blue-700 drop-shadow-lg">
+              Complaint Details
+            </h2>
+            <div className="space-y-3">
+              <p><strong>Subject:</strong> {modalData.subject}</p>
+              <p><strong>Category:</strong> {modalData.category}</p>
+              <p><strong>Priority:</strong> 
+                <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${modalData.priority === "High"
+                  ? "bg-red-100 text-red-700"
+                  : modalData.priority === "Medium"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : "bg-green-100 text-green-700"
+                  }`}>
+                  {modalData.priority}
+                </span>
+              </p>
+              <p><strong>Status:</strong> 
+                <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${modalData.status === "Pending"
+                  ? "bg-orange-100 text-orange-700"
+                  : modalData.status === "In Progress"
+                    ? "bg-blue-100 text-blue-700"
+                    : modalData.status === "Resolved"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-violet-100 text-violet-700"
+                  }`}>
+                  {modalData.status}
+                </span>
+              </p>
+              <p><strong>Building:</strong> {modalData.building}</p>
+              <p><strong>Location:</strong> {modalData.location}</p>
+              <p><strong>Description:</strong> {modalData.description}</p>
+              <p><strong>Submitted:</strong> {formatDateTimeFull(modalData.createdAt)}</p>
+              {modalData.timeSlot && (
+                <p><strong>Time Slot:</strong> {modalData.timeSlot}</p>
+              )}
+              {modalData.reopenedAt && (
+                <p><strong>Reopened:</strong> {formatDateTimeFull(modalData.reopenedAt)}</p>
+              )}
+              {modalData.reopenedNote && (
+                <p><strong>Reopen Reason:</strong> {modalData.reopenedNote}</p>
+              )}
+            </div>
+            <Button
+              onClick={() => setModalData(null)}
+              className="mt-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:from-blue-700 hover:to-blue-500 rounded-2xl font-bold shadow-lg"
+            >
+              Close
+            </Button>
+          </Card>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
       {confirmationData && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
           <Card className="w-full max-w-lg p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-green-50 to-white animate-scaleIn">
@@ -554,289 +753,31 @@ export default function StudentDashboard() {
             <h2 className="text-2xl font-extrabold mb-4 text-green-700 drop-shadow-lg">
               Complaint Submitted Successfully!
             </h2>
-            <p className="mb-2">
-              <strong>Subject:</strong> {confirmationData.subject}
-            </p>
-            <p className="mb-2">
-              <strong>Category:</strong> {confirmationData.category}
-            </p>
-            <p className="mb-2">
-              <strong>Priority:</strong> {confirmationData.priority}
-            </p>
-            <p className="mb-2">
-              <strong>Building:</strong> {confirmationData.building}
-            </p>
-            <p className="mb-2">
-              <strong>Location:</strong> {confirmationData.location}
-            </p>
+            <p className="mb-2"><strong>Subject:</strong> {confirmationData.subject}</p>
+            <p className="mb-2"><strong>Category:</strong> {confirmationData.category}</p>
+            <p className="mb-2"><strong>Priority:</strong> {confirmationData.priority}</p>
+            <p className="mb-2"><strong>Building:</strong> {confirmationData.building}</p>
+            <p className="mb-2"><strong>Location:</strong> {confirmationData.location}</p>
+            {confirmationData.timeSlot && (
+              <p className="mb-2"><strong>Time Slot:</strong> {confirmationData.timeSlot}</p>
+            )}
             <p className="mb-2">
               <strong>Status:</strong>{" "}
-              <span
-                className={`px-2 py-1 rounded-full ${confirmationData.status === "Resolved"
-                  ? "bg-green-100 text-green-700"
-                  : confirmationData.status === "In Progress"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-red-100 text-red-700"
-                  }`}
-              >
+              <span className={`px-2 py-1 rounded-full ${confirmationData.status === "Resolved"
+                ? "bg-green-100 text-green-700"
+                : confirmationData.status === "In Progress"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : "bg-blue-100 text-blue-700"
+                }`}>
                 {confirmationData.status}
               </span>
             </p>
-            <p className="mb-2">
-              <strong>Description:</strong> {confirmationData.description}
-            </p>
-            <p className="mb-2 text-gray-500 flex items-center gap-1">
-              <Clock className="w-4 h-4" /> Submitted at:{" "}
-              {formatDateTimeFull(confirmationData.createdAt)}
-            </p>
-          </Card>
-        </div>
-      )}
-      {/* Complaint Details Modal */}
-      {modalData && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-          <Card className="w-full max-w-lg p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
-            <X
-              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
-              onClick={() => setModalData(null)}
-            />
-            <h2 className="text-2xl font-extrabold mb-4">{modalData.subject}</h2>
-            <p className="mb-2">
-              <strong>Category:</strong> {modalData.category}
-            </p>
-            <p className="mb-2">
-              <strong>Priority:</strong> {modalData.priority}
-            </p>
-            <p className="mb-2">
-              <strong>Building:</strong> {modalData.building}
-            </p>
-            <p className="mb-2">
-              <strong>Location:</strong> {modalData.location}
-            </p>
-            <p className="mb-2">
-              <strong>Status:</strong>{" "}
-              <span
-                className={`px-2 py-1 rounded-full ${modalData.status === "Resolved"
-                  ? "bg-green-100 text-green-700"
-                  : modalData.status === "In Progress"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : modalData.status === "Reopened"
-                      ? "bg-violet-100 text-violet-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-              >
-                {modalData.status}
-              </span>
-            </p>
-            <p className="mb-2">
-              <strong>Description:</strong> {modalData.description}
-            </p>
-            <p className="mb-2 text-gray-500 flex items-center gap-1">
-              <Clock className="w-4 h-4" /> Submitted at:{" "}
-              {formatDateTimeFull(modalData.createdAt)}
-            </p>
-            {modalData.reopenedAt && (
-              <p className="mb-2 text-violet-700 flex items-center gap-2">
-                <Repeat className="w-4 h-4" /> Reopened at: {formatDateTimeFull(modalData.reopenedAt)}
-              </p>
-            )}
-            {modalData.reopenedNote && (
-              <div className="mb-2 text-violet-700 flex items-center gap-2">
-                <Info className="w-4 h-4" />
-                <span>
-                  <strong>Reopen Reason:</strong> {modalData.reopenedNote}
-                </span>
-              </div>
-            )}
-          </Card>
-        </div>
-      )}
-      {/* Complaint Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-          <Card className="w-full max-w-md p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-red-50 to-white animate-scaleIn">
-            <X
-              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
-              onClick={cancelDelete}
-            />
-            <div className="flex items-center gap-3 mb-4">
-              <Trash2 className="w-8 h-8 text-red-700" />
-              <h2 className="text-xl font-extrabold text-red-700 drop-shadow-lg">
-                Delete Complaint?
-              </h2>
-            </div>
-            <p className="mb-2 text-base text-gray-700">
-              Are you sure you want to delete this complaint? This action cannot be undone.
-            </p>
-            <div className="mb-4">
-              <strong>Subject:</strong> {deleteConfirm.subject}
-            </div>
-            <div className="flex justify-end gap-3 mt-4">
-              <Button
-                variant="outline"
-                className="border-gray-400 rounded-xl font-semibold shadow hover:scale-105 hover:bg-red-100 transition-all duration-150"
-                onClick={cancelDelete}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                className="flex items-center gap-1 rounded-xl font-bold shadow hover:bg-red-600 hover:scale-105 transition-all duration-150"
-                onClick={confirmDelete}
-              >
-                <Trash2 className="w-4 h-4" /> Delete
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
-      {/* Complaint Delete Notification Modal */}
-      {deleteData && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-          <Card className="w-full max-w-lg p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-red-100 to-white animate-scaleIn">
-            <X
-              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
-              onClick={() => setDeleteData(null)}
-            />
-            <h2 className="text-2xl font-extrabold mb-4 text-red-700 flex items-center gap-2 drop-shadow-lg">
-              <Trash2 className="w-7 h-7 text-red-700" /> Complaint Deleted!
-            </h2>
-            <p className="mb-2">
-              <strong>Subject:</strong> {deleteData.subject}
-            </p>
-            <p className="mb-2">
-              <strong>Category:</strong> {deleteData.category}
-            </p>
-            <p className="mb-2">
-              <strong>Priority:</strong> {deleteData.priority}
-            </p>
-            <p className="mb-2">
-              <strong>Building:</strong> {deleteData.building}
-            </p>
-            <p className="mb-2">
-              <strong>Location:</strong> {deleteData.location}
-            </p>
-            <p className="mb-2">
-              <strong>Status:</strong>{" "}
-              <span
-                className={`px-2 py-1 rounded-full ${deleteData.status === "Resolved"
-                  ? "bg-green-100 text-green-700"
-                  : deleteData.status === "In Progress"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-red-100 text-red-700"
-                  }`}
-              >
-                {deleteData.status}
-              </span>
-            </p>
-            <p className="mb-2">
-              <strong>Description:</strong> {deleteData.description}
-            </p>
-            <p className="mb-2 text-gray-500 flex items-center gap-1">
-              <Clock className="w-4 h-4" /> Submitted at:{" "}
-              {formatDateTimeFull(deleteData.createdAt)}
-            </p>
-          </Card>
-        </div>
-      )}
-      {/* Reopen Modal */}
-      {reopenModal.open && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-          <Card className="w-full max-w-md p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-violet-50 to-white animate-scaleIn">
-            <X
-              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
-              onClick={closeReopenModal}
-            />
-            <h2 className="text-xl font-extrabold text-violet-700 mb-2 flex items-center gap-2 drop-shadow-lg">
-              <Repeat className="w-6 h-6" /> Reopen Complaint
-            </h2>
-            <p className="mb-2 text-gray-700">
-              Please provide a reason (note) for reopening this complaint:
-            </p>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const note = e.target.reopenNote.value;
-                await handleReopen(note);
-              }}
-              className="flex flex-col gap-4"
+            <Button
+              onClick={() => setConfirmationData(null)}
+              className="mt-4 bg-gradient-to-r from-green-600 to-green-400 text-white hover:from-green-700 hover:to-green-500 rounded-2xl font-bold shadow-lg"
             >
-              <Textarea
-                name="reopenNote"
-                required
-                placeholder="Describe why you want to reopen..."
-                className="min-h-[80px] rounded-xl shadow-inner bg-white/60 hover:bg-violet-50 transition-all duration-150"
-              />
-              <div className="flex gap-4 justify-end">
-                <Button variant="outline" onClick={closeReopenModal}
-                  className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-violet-100 transition-all duration-150">
-                  Cancel
-                </Button>
-                <Button variant="default" type="submit"
-                  className="bg-gradient-to-r from-violet-600 to-violet-400 text-white rounded-xl font-bold shadow hover:scale-105 hover:from-violet-700 hover:to-violet-500 transition-all duration-150">
-                  Confirm Reopen
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      )}
-      {/* Complaint Details Modal */}
-      {modalData && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-          <Card className="w-full max-w-lg p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
-            <X
-              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
-              onClick={() => setModalData(null)}
-            />
-            <h2 className="text-2xl font-extrabold mb-4">{modalData.subject}</h2>
-            <p className="mb-2">
-              <strong>Category:</strong> {modalData.category}
-            </p>
-            <p className="mb-2">
-              <strong>Priority:</strong> {modalData.priority}
-            </p>
-            <p className="mb-2">
-              <strong>Building:</strong> {modalData.building}
-            </p>
-            <p className="mb-2">
-              <strong>Location:</strong> {modalData.location}
-            </p>
-            <p className="mb-2">
-              <strong>Status:</strong>{" "}
-              <span
-                className={`px-2 py-1 rounded-full ${modalData.status === "Resolved"
-                  ? "bg-green-100 text-green-700"
-                  : modalData.status === "In Progress"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : modalData.status === "Reopened"
-                      ? "bg-violet-100 text-violet-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-              >
-                {modalData.status}
-              </span>
-            </p>
-            <p className="mb-2">
-              <strong>Description:</strong> {modalData.description}
-            </p>
-            <p className="mb-2 text-gray-500 flex items-center gap-1">
-              <Clock className="w-4 h-4" /> Submitted at:{" "}
-              {formatDateTimeFull(modalData.createdAt)}
-            </p>
-            {modalData.reopenedAt && (
-              <p className="mb-2 text-violet-700 flex items-center gap-2">
-                <Repeat className="w-4 h-4" /> Reopened at: {formatDateTimeFull(modalData.reopenedAt)}
-              </p>
-            )}
-            {modalData.reopenedNote && (
-              <div className="mb-2 text-violet-700 flex items-center gap-2">
-                <Info className="w-4 h-4" />
-                <span>
-                  <strong>Reopen Reason:</strong> {modalData.reopenedNote}
-                </span>
-              </div>
-            )}
+              Close
+            </Button>
           </Card>
         </div>
       )}

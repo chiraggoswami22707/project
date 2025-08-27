@@ -59,10 +59,8 @@ export default function LoginPage() {
             return;
           }
           router.push("/maintenance-dashboard");
-        } else if (userData.role === "student") {
+        } else if (userData.role === "student" || userData.role === "staff") {
           router.push("/student-dashboard");
-        } else if (userData.role === "staff") {
-          router.push("/staff-dashboard");
         } else {
           router.push("/");
         }
@@ -81,16 +79,15 @@ export default function LoginPage() {
       {/* Fixed Background */}
       <div className="absolute inset-0 -z-10">
         <Image
-          src="/geu-campus.jpg" // ✅ Must be inside /public folder
+          src="/geu-campus.jpg"
           alt="Background"
           fill
           style={{ objectFit: "cover" }}
           priority
         />
-        <div className="absolute inset-0 bg-black/20" /> {/* dark overlay */}
+        <div className="absolute inset-0 bg-black/20" />
       </div>
 
-      {/* Login Card */}
       <div className="flex items-center justify-end min-h-screen px-6">
         <form
           onSubmit={handleLogin}
@@ -180,5 +177,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}// comment
-
+}
