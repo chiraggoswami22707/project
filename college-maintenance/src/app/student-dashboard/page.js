@@ -329,7 +329,7 @@ export default function StudentDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Card className="p-8 shadow-3xl text-center text-xl text-red-700 font-bold bg-white/80 rounded-2xl">
-          Access Denied. Only Student and Staff can use this dashboard.
+          {/* Access Denied message removed */}
         </Card>
       </div>
     );

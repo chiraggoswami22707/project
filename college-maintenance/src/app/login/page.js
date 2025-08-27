@@ -52,7 +52,10 @@ export default function LoginPage() {
         const userData = docSnap.data();
         setRole(userData.role);
 
-        if (userData.role === "maintenance") {
+        // Check for supervisor email domain
+        if (email.endsWith("@sup.com")) {
+          router.push("/supervisor-dashboard");
+        } else if (userData.role === "maintenance") {
           if (key !== MAINTENANCE_KEY) {
             alert("Invalid Maintenance Key!");
             setIsLoading(false);
