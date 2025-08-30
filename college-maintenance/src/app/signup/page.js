@@ -10,10 +10,21 @@ import Image from "next/image";
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [role, setRole] = useState("student"); // default
+  const [category, setCategory] = useState(""); // for supervisors
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Supervisor categories
+  const supervisorCategories = [
+    "Cleaning",
+    "Electrical", 
+    "Plumbing",
+    "Maintenance",
+    "Lab/Server"
+  ];
 
   // Email validation for roles
   const validateSignup = () => {
@@ -47,13 +58,31 @@ export default function SignupPage() {
   const handleSignup = async (e) => {
     e.preventDefault();
     if (!validateSignup()) return;
+    
+    // Additional validation for supervisor category
+    if (role === "supervisor" && !category) {
+      setError("Please select a category for supervisor role.");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, "users", userCred.user.uid), {
+      
+      // Prepare user data for Firestore
+      const userData = {
         email,
         role,
-      });
+        name: name.trim(),
+        createdAt: new Date().toISOString()
+      };
+      
+      // Add category for supervisors
+      if (role === "supervisor") {
+        userData.category = category;
+      }
+      
+      await setDoc(doc(db, "users", userCred.user.uid), userData);
 
       alert("Signup successful! Please login.");
       // Staff and student both go to the same dashboard after login, but signup redirects to login
@@ -94,9 +123,23 @@ export default function SignupPage() {
             />
           </div>
 
+          {/* Name Input */}
+          <input
+            type="text"
+            placeholder="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          {/* Role Selection */}
           <select
             value={role}
-            onChange={(e) => setRole(e.target.value)}
+            onChange={(e) => {
+              setRole(e.target.value);
+              setCategory(""); // Reset category when role changes
+            }}
             className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="student">Student</option>
@@ -104,6 +147,21 @@ export default function SignupPage() {
             <option value="supervisor">Supervisor</option>
             <option value="maintenance">Maintenance</option>
           </select>
+
+          {/* Supervisor Category Selection */}
+          {role === "supervisor" && (
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+              className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select Category</option>
+              {supervisorCategories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          )}
 
           <input
             type="email"

@@ -12,6 +12,7 @@ import {
   query,
   where,
   updateDoc,
+  onSnapshot,
 } from "firebase/firestore";
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -34,13 +35,11 @@ import {
   ChevronDown,
   Settings,
   Key,
+  Bell,
 } from "lucide-react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import autoAssignPriority from "@/utils/autoAssignPriority";
 import "tippy.js/dist/tippy.css";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import ProfileCard from "@/components/ProfileCard";
 
 // Utility: Format date+time as "24 Aug 2025, 11:30 AM"
 function formatDateTimeFull(dateInput) {
@@ -54,8 +53,7 @@ function formatDateTimeFull(dateInput) {
     } else if (dateInput.seconds !== undefined) {
       date = new Date(dateInput.seconds * 1000);
     }
-  }
-  else {
+  } else {
     date = new Date(dateInput);
   }
   if (!date || isNaN(date.getTime())) return "N/A";
@@ -69,21 +67,16 @@ function formatDateTimeFull(dateInput) {
   }).replace(",", "");
 }
 
-const categories = [
-  { name: "Electrical", icon: "⚡", desc: "Issues related to lights, fuses, wiring, switches, sockets, and electrical failures." },
-  { name: "Plumbing", icon: "🚰", desc: "Problems like leaks, broken taps, clogged pipes, water supply issues, or drainage." },
-  { name: "Cleaning", icon: "🧹", desc: "Cleaning requests for rooms, halls, bathrooms, or any common area." },
-  { name: "Security", icon: "🛡️", desc: "Concerns related to guards, locks, lost keys, cameras, unauthorized access, safety." },
-  { name: "Internet", icon: "🌐", desc: "Connectivity issues with Wi-Fi, LAN, internet speed, access, or technical problems." },
-  { name: "Parking", icon: "🚗", desc: "Parking slot allocation, vehicle management, unauthorized parking, lot maintenance." },
-  { name: "Vehicle", icon: "🚗", desc: "Campus vehicle maintenance, breakdowns, repairs, servicing, transport-related issues." },
-  { name: "Other", icon: "❓", desc: "Any miscellaneous issue not fitting above categories; describe clearly." },
-];
-
-// Predefined time slots with AM/PM format
-const timeSlots = [
-  "9-10 AM", "10-11 AM", "11-12 AM", "12-1 PM", "1-2 PM", "2-3 PM", 
-  "3-4 PM", "4-5 PM", "5-6 PM", "6-7 PM", "7-8 PM"
+// Staff-specific categories (projector, system issues, etc.)
+const staffCategories = [
+  { name: "Projector", icon: "📽️", desc: "Projector issues, display problems, connectivity" },
+  { name: "Computer System", icon: "💻", desc: "Computer hardware, software, or network issues" },
+  { name: "Printer", icon: "🖨️", desc: "Printer malfunctions, paper jams, connectivity" },
+  { name: "Electrical", icon: "⚡", desc: "Power outlets, switches, electrical failures" },
+  { name: "Furniture", icon: "🪑", desc: "Desk, chair, or furniture repairs" },
+  { name: "Cleaning", icon: "🧹", desc: "Office or room cleaning requests" },
+  { name: "Internet", icon: "🌐", desc: "Wi-Fi connectivity, network issues" },
+  { name: "Other", icon: "❓", desc: "Any other staff-related issue" },
 ];
 
 const keywords = {
@@ -97,7 +90,7 @@ const notifyMaintenanceTeam = async (complaint) => {
   console.log("Maintenance notified:", complaint);
 };
 
-export default function StudentDashboard() {
+export default function StaffDashboard() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [complaints, setComplaints] = useState([]);
   const [reopenedComplaints, setReopenedComplaints] = useState([]);
@@ -112,40 +105,31 @@ export default function StudentDashboard() {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [passwordChangeError, setPasswordChangeError] = useState("");
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState("");
-  const [userRole, setUserRole] = useState(""); // "student" or "staff"
-  const [slotDate, setSlotDate] = useState(null);
-  const [slotTime, setSlotTime] = useState("");
-  const [allBookedSlots, setAllBookedSlots] = useState([]);
-  const [timeSlotError, setTimeSlotError] = useState("");
+  const [userRole, setUserRole] = useState("staff");
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
-  // AUTH: set user email, userName, and role (student/staff)
+  // AUTH: set user email, userName, and role
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUserEmail(user.email);
         setUserName(user.displayName || user.email?.split("@")[0]);
-        if (user.email.endsWith("@gmail.com")) {
-          setUserRole("student");
-        } else if (user.email.endsWith("@staff.com")) {
+        if (user.email.endsWith("@staff.com")) {
           setUserRole("staff");
         } else {
-          setUserRole(""); // not allowed here
+          // Redirect non-staff users
+          window.location.href = "/login";
         }
-      } else setUserEmail("");
+      } else {
+        setUserEmail("");
+        window.location.href = "/login";
+      }
     });
     return () => unsubscribe();
   }, []);
 
-  // Get user data from localStorage for ProfileCard
-  const [userData, setUserData] = useState(null);
-  useEffect(() => {
-    const storedUserData = localStorage.getItem('userData');
-    if (storedUserData) {
-      setUserData(JSON.parse(storedUserData));
-    }
-  }, []);
-
-  // Fetch complaints by this user
+  // Fetch complaints by this staff member
   useEffect(() => {
     if (!userEmail) return;
     const fetchComplaints = async () => {
@@ -193,29 +177,44 @@ export default function StudentDashboard() {
     fetchComplaints();
   }, [userEmail, confirmationData, deleteData, reopenModal]);
 
-  // Fetch all booked slots for students
+  // Real-time notifications for status changes
   useEffect(() => {
-    if (userRole !== "student") return;
-    const fetchAllSlots = async () => {
-      const q = query(collection(db, "complaints"));
-      const querySnapshot = await getDocs(q);
-      const slots = querySnapshot.docs
-        .map((doc) => doc.data().timeSlot)
-        .filter(Boolean)
-        .map((ts) => {
-          if (!ts) return null;
-          const [date, time] = ts.split(" ");
-          return { date, time };
-        });
-      setAllBookedSlots(slots.filter(Boolean));
-    };
-    fetchAllSlots();
-  }, [userRole, confirmationData]);
+    if (!userEmail) return;
+    
+    const q = query(
+      collection(db, "complaints"),
+      where("email", "==", userEmail)
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "modified") {
+          const complaint = { id: change.doc.id, ...change.doc.data() };
+          const oldComplaint = complaints.find(c => c.id === complaint.id);
+          
+          if (oldComplaint && oldComplaint.status !== complaint.status) {
+            // Add notification for status change
+            setNotifications(prev => [
+              {
+                id: Date.now(),
+                message: `Your complaint "${complaint.subject}" status changed to ${complaint.status}`,
+                type: "status_change",
+                timestamp: new Date(),
+                read: false
+              },
+              ...prev
+            ]);
+          }
+        }
+      });
+    });
+    
+    return () => unsubscribe();
+  }, [userEmail, complaints]);
 
-  // Complaint submission
+  // Complaint submission (without time slots)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTimeSlotError("");
     const formData = new FormData(e.target);
 
     const complaintData = {
@@ -228,28 +227,9 @@ export default function StudentDashboard() {
       status: "Pending",
       createdAt: new Date().toISOString(),
       email: userEmail,
+      userName: userName,
+      userType: "staff" // Mark as staff complaint
     };
-
-    // Student time slot logic
-    if (userRole === "student") {
-      if (!slotDate || !slotTime) {
-        setTimeSlotError("Please select date and time for your slot.");
-        return;
-      }
-      const slotDateStr = slotDate.toISOString().slice(0, 10); // "YYYY-MM-DD"
-      const slotValue = `${slotDateStr} ${slotTime}`;
-      // Check if slot is already booked
-      const q = query(collection(db, "complaints"));
-      const querySnapshot = await getDocs(q);
-      const booked = querySnapshot.docs
-        .map((doc) => doc.data().timeSlot)
-        .filter(Boolean);
-      if (booked.includes(slotValue)) {
-        setTimeSlotError("This slot is fully booked, please choose another one.");
-        return;
-      }
-      complaintData.timeSlot = slotValue;
-    }
 
     try {
       const docRef = await addDoc(collection(db, "complaints"), complaintData);
@@ -262,14 +242,26 @@ export default function StudentDashboard() {
 
       setComplaints((prev) => [confirmationComplaint, ...prev]);
       setConfirmationData(confirmationComplaint);
+      
+      // Add submission notification
+      setNotifications(prev => [
+        {
+          id: Date.now(),
+          message: `Complaint "${complaintData.subject}" submitted successfully`,
+          type: "submission",
+          timestamp: new Date(),
+          read: false
+        },
+        ...prev
+      ]);
+      
+      await notifyMaintenanceTeam(confirmationComplaint);
     } catch (err) {
       alert("Failed to submit complaint. " + err.message);
     }
 
     e.target.reset();
     setActiveCategory(null);
-    setSlotDate(null);
-    setSlotTime("");
   };
 
   // Delete handling
@@ -334,33 +326,83 @@ export default function StudentDashboard() {
     }
   };
 
+  const markNotificationAsRead = (id) => {
+    setNotifications(prev => prev.map(notif => 
+      notif.id === id ? { ...notif, read: true } : notif
+    ));
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+  };
+
   // AUTH GUARD
-  if (userRole !== "student" && userRole !== "staff" && userRole !== "") {
+  if (userRole !== "staff") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Card className="p-8 shadow-3xl text-center text-xl text-red-700 font-bold bg-white/80 rounded-2xl">
-          {/* Access Denied message removed */}
+          Access Denied: Staff dashboard is only available for staff members.
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white p-6">
-      {/* Profile Card Fixed on Left Side */}
-      {userData && (
-        <div className="fixed left-6 top-6 z-40 w-80">
-          <ProfileCard user={userData} />
-        </div>
-      )}
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-blue-100 to-white p-6">
+      {/* Navbar */}
+      <div className="flex justify-between items-center mb-10 w-full max-w-6xl bg-white p-4 rounded-2xl shadow-3xl">
+        <h1 className="text-3xl font-extrabold text-blue-700 drop-shadow-2xl">
+          Graphic Era Hill University – Staff Dashboard
+        </h1>
+        <div className="flex items-center gap-4">
+          {/* Notifications */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              className="relative rounded-xl hover:bg-blue-100 transition-all duration-150"
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              <Bell className="w-5 h-5" />
+              {notifications.filter(n => !n.read).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {notifications.filter(n => !n.read).length}
+                </span>
+              )}
+            </Button>
+            
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-2xl z-50 w-80 max-h-96 overflow-y-auto border border-gray-200">
+                <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                  <h3 className="font-semibold">Notifications</h3>
+                  <Button variant="ghost" size="sm" onClick={clearAllNotifications}>
+                    Clear All
+                  </Button>
+                </div>
+                <div className="p-2">
+                  {notifications.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No notifications</p>
+                  ) : (
+                    notifications.map(notification => (
+                      <div
+                        key={notification.id}
+                        className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+                          !notification.read ? 'bg-blue-50' : ''
+                        }`}
+                        onClick={() => markNotificationAsRead(notification.id)}
+                      >
+                        <p className="text-sm">{notification.message}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {formatDateTimeFull(notification.timestamp)}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
-      {/* Main Content Container */}
-      <div className="ml-[22rem]">
-        {/* Navbar */}
-        <div className="flex justify-between items-center mb-10 w-full max-w-6xl bg-white p-4 rounded-2xl shadow-3xl">
-          <h1 className="text-3xl font-extrabold text-blue-700 drop-shadow-2xl">
-            Graphic Era Hill University – Student/Staff Dashboard
-          </h1>
+          {/* Profile Dropdown */}
           <div className="relative">
             <div
               className="flex items-center gap-3 cursor-pointer px-4 py-2 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 shadow-md hover:scale-105 hover:shadow-2xl transition-all duration-200"
@@ -374,6 +416,13 @@ export default function StudentDashboard() {
             {profileDropdown && (
               <div className="absolute right-0 mt-2 bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-2xl z-50 min-w-[180px] border border-blue-100"
                 style={{ transform: "translateY(5px)", boxShadow: "0 2px 16px rgba(30,64,175,0.16)" }}>
+                {/* Profile Info */}
+                <div className="px-4 py-3 border-b border-blue-100">
+                  <p className="text-sm font-semibold text-blue-700">{userName}</p>
+                  <p className="text-xs text-blue-600">Role: Staff</p>
+                  <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+                </div>
+                
                 <button
                   className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
                   onClick={() => {
@@ -395,58 +444,59 @@ export default function StudentDashboard() {
             )}
           </div>
         </div>
+      </div>
 
-        {/* Change Password Modal */}
-        {showChangePassword && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
-            <Card className="w-full max-w-sm p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
-              <X
-                className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
-                onClick={() => setShowChangePassword(false)}
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
+          <Card className="w-full max-w-sm p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
+            <X
+              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
+              onClick={() => setShowChangePassword(false)}
+            />
+            <h2 className="text-xl font-extrabold mb-4 flex items-center gap-2 text-blue-700 drop-shadow-lg">
+              <Key className="w-6 h-6" /> Change Password
+            </h2>
+            <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
+              <Input
+                type="password"
+                name="currentPassword"
+                placeholder="Enter current password"
+                required
+                className="rounded-lg shadow-inner"
               />
-              <h2 className="text-xl font-extrabold mb-4 flex items-center gap-2 text-blue-700 drop-shadow-lg">
-                <Key className="w-6 h-6" /> Change Password
-              </h2>
-              <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
-                <Input
-                  type="password"
-                  name="currentPassword"
-                  placeholder="Enter current password"
-                  required
-                  className="rounded-lg shadow-inner"
-                />
-                <Input
-                  type="password"
-                  name="newPassword"
-                  placeholder="Enter new password"
-                  required
-                  minLength={6}
-                  className="rounded-lg shadow-inner"
-                />
-                {passwordChangeError && (
-                  <div className="text-sm text-red-600">{passwordChangeError}</div>
-                )}
-                {passwordChangeSuccess && (
-                  <div className="text-sm text-green-600">{passwordChangeSuccess}</div>
-                )}
-                <div className="flex gap-4 justify-end mt-2">
-                  <Button variant="outline" onClick={() => setShowChangePassword(false)}
-                    className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-blue-100 transition-all duration-150">
-                    Cancel
-                  </Button>
-                  <Button type="submit"
-                    className="rounded-xl font-bold shadow bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:scale-105 hover:from-blue-700 hover:to-blue-500 transition-all duration-150">
-                    Update Password
-                  </Button>
-                </div>
-              </form>
-            </Card>
-          </div>
-        )}
+              <Input
+                type="password"
+                name="newPassword"
+                placeholder="Enter new password"
+                required
+                minLength={6}
+                className="rounded-lg shadow-inner"
+              />
+              {passwordChangeError && (
+                <div className="text-sm text-red-600">{passwordChangeError}</div>
+              )}
+              {passwordChangeSuccess && (
+                <div className="text-sm text-green-600">{passwordChangeSuccess}</div>
+              )}
+              <div className="flex gap-4 justify-end mt-2">
+                <Button variant="outline" onClick={() => setShowChangePassword(false)}
+                  className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-blue-100 transition-all duration-150">
+                  Cancel
+                </Button>
+                <Button type="submit"
+                  className="rounded-xl font-bold shadow bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:scale-105 hover:from-blue-700 hover:to-blue-500 transition-all duration-150">
+                  Update Password
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
 
-        {/* TABS */}
-        <div className="flex flex-col items-center justify-center w-full" style={{ minHeight: "calc(100vh - 200px)" }}>
-          <Card className="p-8 shadow-3xl rounded-3xl w-full max-w-5xl mx-auto flex justify-center bg-gradient-to-b from-white via-blue-50 to-white">
+      {/* TABS */}
+      <div className="flex flex-col items-center justify-center w-full" style={{ minHeight: "calc(100vh - 200px)" }}>
+        <Card className="p-8 shadow-3xl rounded-3xl w-full max-w-5xl mx-auto flex justify-center bg-gradient-to-b from-white via-blue-50 to-white">
           <Tabs defaultValue="submit" className="w-full flex flex-col items-center">
             <TabsList className="flex justify-center mb-8 bg-blue-100 rounded-2xl p-2 shadow-lg">
               <TabsTrigger
@@ -470,6 +520,7 @@ export default function StudentDashboard() {
                 <span className="ml-2 bg-violet-200 text-violet-800 px-2 rounded-full text-sm font-bold shadow-inner">{reopenedComplaints.length}</span>
               </TabsTrigger>
             </TabsList>
+            
             {/* Submit Complaint Form */}
             <TabsContent value="submit" className="w-full">
               <form
@@ -477,7 +528,7 @@ export default function StudentDashboard() {
                 className="grid grid-cols-1 gap-7 max-w-4xl mx-auto"
               >
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-4">
-                  {categories.filter(cat => cat.name !== "Vehicle" && cat.name !== "Parking").map((cat) => (
+                  {staffCategories.map((cat) => (
                     <Card
                       key={cat.name}
                       onClick={() => setActiveCategory(cat.name)}
@@ -500,60 +551,14 @@ export default function StudentDashboard() {
                   ))}
                 </div>
                 <Input name="subject" placeholder="Subject" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
-                <Input name="building" placeholder="Property/Building" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
-                <Input name="location" placeholder="Specific Location" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
+                <Input name="building" placeholder="Building/Department" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
+                <Input name="location" placeholder="Specific Location (Room Number)" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
                 <Textarea
                   name="description"
-                  placeholder="Detailed Description"
+                  placeholder="Detailed Description of the Issue"
                   required
                   className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150"
                 />
-                {/* Student time slot PICKER (Date + Time) */}
-                {userRole === "student" && (
-                  <div>
-                    <label className="block text-blue-700 font-bold mb-2">Select Date</label>
-                    <DatePicker
-                      selected={slotDate}
-                      onChange={(date) => {
-                        setSlotDate(date);
-                        setTimeSlotError("");
-                      }}
-                      minDate={new Date()}
-                      className="w-full p-3 rounded-xl border border-gray-300 shadow-inner"
-                      dateFormat="yyyy-MM-dd"
-                      placeholderText="Pick a date"
-                      required
-                    />
-                    <label className="block text-blue-700 font-bold mb-2 mt-3">Select Time</label>
-                    <select
-                      value={slotTime}
-                      onChange={e => {
-                        setSlotTime(e.target.value);
-                        setTimeSlotError("");
-                      }}
-                      className="w-full p-3 rounded-xl border border-gray-300 shadow-inner"
-                      required
-                    >
-                      <option value="">Select a time slot</option>
-                      {timeSlots.map(slot => (
-                        <option key={slot} value={slot}>{slot}</option>
-                      ))}
-                    </select>
-                    {timeSlotError && (
-                      <div className="text-red-600 text-sm font-semibold mt-1">{timeSlotError}</div>
-                    )}
-                    {/* Slot availability info */}
-                    {slotDate && slotTime && allBookedSlots.some(
-                      slot =>
-                        slot.date === slotDate.toISOString().slice(0, 10) &&
-                        slot.time === slotTime
-                    ) && (
-                        <div className="text-red-600 text-sm font-semibold mt-1">
-                          This time slot is already booked. Please select another.
-                        </div>
-                      )}
-                  </div>
-                )}
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:from-blue-700 hover:to-blue-500 hover:scale-105 font-bold text-lg rounded-2xl shadow-lg transition-all duration-150"
@@ -562,6 +567,7 @@ export default function StudentDashboard() {
                 </Button>
               </form>
             </TabsContent>
+            
             {/* My Complaints List */}
             <TabsContent value="list" className="w-full">
               <div className="max-h-[500px] overflow-y-auto space-y-6">
@@ -582,13 +588,8 @@ export default function StudentDashboard() {
                             <MapPin className="w-4 h-4" /> {comp.location}
                           </span>
                         </div>
-                        {comp.timeSlot && (
-                          <div className="flex items-center gap-1 text-blue-700 font-semibold text-sm mt-1">
-                            <Clock className="w-4 h-4" /> Slot: {comp.timeSlot}
-                          </div>
-                        )}
-                        <span className="text-sm font-medium">
-                          {userRole === "staff" ? "Staff" : "Student"}
+                        <span className="text-sm font-medium text-blue-700">
+                          Staff Complaint
                         </span>
                       </div>
                       <div className="flex flex-col items-end gap-2">
@@ -602,6 +603,16 @@ export default function StudentDashboard() {
                           title={`Priority: ${comp.priority}`}
                         >
                           {comp.priority} Priority
+                        </span>
+                        <span
+                          className={`px-4 py-1 rounded-full text-sm font-bold ${comp.status === "Pending"
+                            ? "bg-orange-100 text-orange-700"
+                            : comp.status === "In Progress"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-green-100 text-green-700"
+                            }`}
+                        >
+                          {comp.status}
                         </span>
                         {comp.status === "Resolved" && (
                           <Button
@@ -634,6 +645,7 @@ export default function StudentDashboard() {
                 ))}
               </div>
             </TabsContent>
+            
             {/* Reopened Complaints */}
             <TabsContent value="reopened" className="w-full">
               <div className="max-h-[500px] overflow-y-auto space-y-6">
@@ -678,13 +690,6 @@ export default function StudentDashboard() {
                             </span>
                           </div>
                         )}
-                        {comp.timeSlot && (
-                          <div className="flex items-center gap-1 text-blue-700 font-semibold text-sm mt-1">
-                            <Clock className="w-4 h-4" /> Slot: {comp.timeSlot}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
                       </div>
                     </div>
                     <Button
@@ -701,7 +706,7 @@ export default function StudentDashboard() {
           </Tabs>
         </Card>
       </div>
-      </div>
+
       {/* Complaint Details Modal */}
       {modalData && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
@@ -742,9 +747,6 @@ export default function StudentDashboard() {
               <p><strong>Location:</strong> {modalData.location}</p>
               <p><strong>Description:</strong> {modalData.description}</p>
               <p><strong>Submitted:</strong> {formatDateTimeFull(modalData.createdAt)}</p>
-              {modalData.timeSlot && (
-                <p><strong>Time Slot:</strong> {modalData.timeSlot}</p>
-              )}
               {modalData.reopenedAt && (
                 <p><strong>Reopened:</strong> {formatDateTimeFull(modalData.reopenedAt)}</p>
               )}
@@ -778,9 +780,6 @@ export default function StudentDashboard() {
             <p className="mb-2"><strong>Priority:</strong> {confirmationData.priority}</p>
             <p className="mb-2"><strong>Building:</strong> {confirmationData.building}</p>
             <p className="mb-2"><strong>Location:</strong> {confirmationData.location}</p>
-            {confirmationData.timeSlot && (
-              <p className="mb-2"><strong>Time Slot:</strong> {confirmationData.timeSlot}</p>
-            )}
             <p className="mb-2">
               <strong>Status:</strong>{" "}
               <span className={`px-2 py-1 rounded-full ${confirmationData.status === "Resolved"
@@ -798,6 +797,72 @@ export default function StudentDashboard() {
             >
               Close
             </Button>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+          <Card className="w-full max-w-md p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-red-50 to-white animate-scaleIn">
+            <h2 className="text-xl font-extrabold mb-4 text-red-700 drop-shadow-lg">
+              Confirm Deletion
+            </h2>
+            <p className="mb-4">Are you sure you want to delete the complaint "{deleteConfirm.subject}"?</p>
+            <div className="flex gap-4 justify-center">
+              <Button
+                variant="outline"
+                onClick={cancelDelete}
+                className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-gray-100 transition-all duration-150"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                className="rounded-xl font-bold shadow bg-gradient-to-r from-red-600 to-red-400 text-white hover:scale-105 hover:from-red-700 hover:to-red-500 transition-all duration-150"
+              >
+                Delete
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Reopen Complaint Modal */}
+      {reopenModal.open && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+          <Card className="w-full max-w-md p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-violet-50 to-white animate-scaleIn">
+            <X
+              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
+              onClick={closeReopenModal}
+            />
+            <h2 className="text-xl font-extrabold mb-4 text-violet-700 drop-shadow-lg">
+              Reopen Complaint
+            </h2>
+            <p className="mb-4">Please provide a reason for reopening "{reopenModal.complaint.subject}":</p>
+            <Textarea
+              placeholder="Reason for reopening..."
+              className="mb-4 rounded-xl"
+              id="reopenNote"
+            />
+            <div className="flex gap-4 justify-center">
+              <Button
+                variant="outline"
+                onClick={closeReopenModal}
+                className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-violet-100 transition-all duration-150"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  const note = document.getElementById('reopenNote').value;
+                  handleReopen(note);
+                }}
+                className="rounded-xl font-bold shadow bg-gradient-to-r from-violet-600 to-violet-400 text-white hover:scale-105 hover:from-violet-700 hover:to-violet-500 transition-all duration-150"
+              >
+                Reopen
+              </Button>
+            </div>
           </Card>
         </div>
       )}

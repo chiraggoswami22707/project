@@ -52,6 +52,12 @@ export default function LoginPage() {
         const userData = docSnap.data();
         setRole(userData.role);
 
+        // Store user data in localStorage for dashboard access
+        localStorage.setItem('userData', JSON.stringify({
+          ...userData,
+          uid: userCred.user.uid
+        }));
+
         // Check for supervisor email domain
         if (email.endsWith("@sup.com")) {
           router.push("/supervisor-dashboard");
@@ -62,8 +68,10 @@ export default function LoginPage() {
             return;
           }
           router.push("/maintenance-dashboard");
-        } else if (userData.role === "student" || userData.role === "staff") {
+        } else if (userData.role === "student") {
           router.push("/student-dashboard");
+        } else if (userData.role === "staff") {
+          router.push("/staff-dashboard");
         } else {
           router.push("/");
         }

@@ -7,6 +7,10 @@ import {
   onSnapshot,
   updateDoc,
   doc,
+  getDocs,
+  query,
+  where,
+  Timestamp,
 } from "firebase/firestore";
 import { signOut, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import {
@@ -24,13 +28,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import autoAssignPriority from "@/utils/autoAssignPriority";
+import ProfileCard from "@/components/ProfileCard";
 
-// FIXED: Robust date formatting
+import * as XLSX from "xlsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { PlusCircle } from "lucide-react";
+import { useRef } from "react";
+
 function formatDateTimeFull(dateInput) {
   let date;
   if (!dateInput) return "N/A";
-  // Firestore Timestamp (object with seconds)
   if (typeof dateInput === "object" && dateInput !== null) {
     if (dateInput instanceof Date) {
       date = dateInput;
@@ -39,7 +48,6 @@ function formatDateTimeFull(dateInput) {
     } else if (typeof dateInput.seconds === "number") {
       date = new Date(dateInput.seconds * 1000);
     } else {
-      // Try to coerce other objects
       date = new Date(dateInput);
     }
   } else if (typeof dateInput === "string" || typeof dateInput === "number") {
@@ -59,15 +67,17 @@ function formatDateTimeFull(dateInput) {
 }
 
 const categories = [
-  "All Categories",
-  "Electrical",
-  "Plumbing",
-  "Cleaning",
-  "Security",
-  "Internet",
-  "Parking",
-  "Vehicle",
-  "Other",
+  { name: "All Categories", icon: "📋", desc: "View all complaints across all categories" },
+  { name: "Cleaning", icon: "🧹", desc: "Cleaning requests for rooms, halls, bathrooms, or any common area" },
+  { name: "Electrical", icon: "⚡", desc: "Issues related to lights, fuses, wiring, switches, sockets, and electrical failures" },
+  { name: "Plumbing", icon: "🚰", desc: "Problems like leaks, broken taps, clogged pipes, water supply issues, or drainage" },
+  { name: "Maintenance", icon: "🔧", desc: "General maintenance issues and repairs" },
+  { name: "Lab/Server", icon: "💻", desc: "Lab equipment, server issues, and technical problems" },
+  { name: "Security", icon: "🔒", desc: "Security-related issues and concerns" },
+  { name: "Internet", icon: "🌐", desc: "Internet connectivity and network issues" },
+  { name: "Parking", icon: "🚗", desc: "Parking-related complaints and issues" },
+  { name: "Vehicle", icon: "🚙", desc: "Vehicle maintenance and transportation issues" },
+  { name: "Other", icon: "❓", desc: "Any miscellaneous issue not fitting above categories" },
 ];
 
 const priorities = ["All Priority", "High", "Medium", "Low", "Reopened"];
@@ -81,7 +91,6 @@ export default function MaintenanceDashboard() {
   const [priority, setPriority] = useState("All Priority");
   const [dateFilter, setDateFilter] = useState("");
   const [activeTab, setActiveTab] = useState("Overview");
-  const [profileDropdown, setProfileDropdown] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [passwordChangeError, setPasswordChangeError] = useState("");
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState("");
@@ -90,6 +99,145 @@ export default function MaintenanceDashboard() {
   const [notification, setNotification] = useState(null);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [supervisorFilter, setSupervisorFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [userData, setUserData] = useState(null);
+  const [profileDropdown, setProfileDropdown] = useState(false);
+
+  // New states for export modal and filters
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [filterFromDate, setFilterFromDate] = useState(null);
+  const [filterToDate, setFilterToDate] = useState(null);
+  const [filterCategory, setFilterCategory] = useState("All Categories");
+  const [filterStatus, setFilterStatus] = useState("All Status");
+  const [filterPriority, setFilterPriority] = useState("All Priority");
+
+  // Handler to clear filters in export modal
+  const handleClearFilters = () => {
+    setFilterFromDate(null);
+    setFilterToDate(null);
+    setFilterCategory("All Categories");
+    setFilterStatus("All Status");
+    setFilterPriority("All Priority");
+  };
+
+  // Handler for export form submit
+
+  const handleExportSubmit = async (e) => {
+    e.preventDefault();
+
+    let q = collection(db, "complaints");
+    const constraints = [];
+
+    if (filterCategory !== "All Categories") {
+      constraints.push(where("category", "==", filterCategory));
+    }
+    if (filterStatus !== "All Status") {
+      constraints.push(where("status", "==", filterStatus));
+    }
+    if (filterPriority !== "All Priority") {
+      constraints.push(where("priority", "==", filterPriority));
+    }
+
+    // Apply date range filters properly
+    if (filterFromDate) {
+      const fromDate = new Date(filterFromDate);
+      fromDate.setHours(0, 0, 0, 0);
+      constraints.push(where("createdAt", ">=", Timestamp.fromDate(fromDate)));
+    }
+    if (filterToDate) {
+      const toDate = new Date(filterToDate);
+      toDate.setHours(23, 59, 59, 999);
+      constraints.push(where("createdAt", "<=", Timestamp.fromDate(toDate)));
+    }
+
+    // Remove invalid Firestore '!=' filter on createdAt
+    // constraints.push(where("createdAt", "!=", null));
+
+    if (constraints.length > 0) {
+      q = query(q, ...constraints);
+    }
+
+    try {
+      const querySnapshot = await getDocs(q);
+      console.log("Number of complaints fetched for export:", querySnapshot.size);
+      let filteredData = querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(c => c.createdAt); // filter out docs without createdAt
+
+
+
+      // Prepare data for Excel export
+      const wsData = [
+        [
+          "Complaint ID",
+          "Submitted By",
+          "Role",
+          "Email",
+          "Building Name",
+          "Room / Location",
+          "Complaint Category",
+          "Complaint Details",
+          "Priority",
+          "Assigned Supervisor",
+          "Status",
+          "Date Submitted",
+          "Preferred Time Slot",
+          "Resolved Date"
+        ],
+        ...filteredData.map(c => [
+          c.id || "",
+          c.userName || c.user || "",
+          c.role || "",
+          c.email || "",
+          c.building || "",
+          c.location || "",
+          c.category || "",
+          c.description || "",
+          c.priority || "",
+          c.assigned || "",
+          c.status || "",
+          c.createdAt ? (c.createdAt.seconds ? new Date(c.createdAt.seconds * 1000).toISOString().slice(0, 10) : new Date(c.createdAt).toISOString().slice(0, 10)) : "",
+          c.preferredTimeSlot || "",
+          c.resolvedAt ? (c.resolvedAt.seconds ? new Date(c.resolvedAt.seconds * 1000).toISOString().slice(0, 10) : new Date(c.resolvedAt).toISOString().slice(0, 10)) : ""
+        ])
+      ];
+
+      // Create worksheet and workbook
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      // Set header row bold
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = XLSX.utils.encode_cell({ r: 0, c: C });
+        if (!ws[cell_address]) continue;
+        if (!ws[cell_address].s) ws[cell_address].s = {};
+        ws[cell_address].s.font = { bold: true };
+      }
+
+      // Auto width columns
+      const colWidths = wsData[0].map((_, colIndex) => {
+        return { wch: Math.max(...wsData.map(row => (row[colIndex] ? row[colIndex].toString().length : 10))) + 2 };
+      });
+      ws['!cols'] = colWidths;
+
+      // Create workbook and add worksheet
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Maintenance Complaints");
+
+      // Write workbook and trigger download
+      XLSX.writeFile(wb, "Maintenance_Complaints_Report.xlsx");
+
+      // Close modal after export
+      setExportModalOpen(false);
+      handleClearFilters();
+
+    } catch (error) {
+      console.error("Error exporting complaints:", error);
+      alert("Failed to export complaints. Please try again.");
+    }
+  };
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -102,12 +250,16 @@ export default function MaintenanceDashboard() {
     let initialLoad = true;
     const unsub = onSnapshot(q, (snap) => {
       const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log("Number of complaints fetched from Firestore:", data.length);
+      // Log createdAt values for debugging
+      data.forEach((comp, index) => {
+        console.log(`Complaint ${index + 1} createdAt:`, comp.createdAt);
+      });
       if (!initialLoad && data.length > complaints.length) {
         setNotification("New complaint submitted!");
         setTimeout(() => setNotification(null), 4000);
       }
       setComplaints(data.sort((a, b) => {
-        // If createdAt is missing, show at end
         if (!a.createdAt && !b.createdAt) return 0;
         if (!a.createdAt) return 1;
         if (!b.createdAt) return -1;
@@ -127,6 +279,17 @@ export default function MaintenanceDashboard() {
     && (priority === "All Priority" || comp.priority === priority || (priority === "Reopened" && comp.status === "Reopened"))
     && (dateFilter === "" || formatDateTimeFull(comp.createdAt).slice(0, 11) === formatDateTimeFull(dateFilter).slice(0, 11))
   );
+
+  // Get supervisor complaints (complaints from users with @sup.com email)
+  const supervisorComplaints = complaints.filter(comp =>
+    comp.email?.endsWith("@sup.com")
+  );
+
+  // Get supervisor complaints by category
+  const getSupervisorComplaintsByCategory = (selectedCategory) => {
+    if (selectedCategory === "All Categories") return supervisorComplaints;
+    return supervisorComplaints.filter(comp => comp.category === selectedCategory);
+  };
 
   const total = complaints.length;
   const pending = complaints.filter((c) => c.status === "Pending").length;
@@ -199,9 +362,11 @@ export default function MaintenanceDashboard() {
                 </button>
                 <button
                   className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
-                  onClick={() =>
-                    signOut(auth)
-                  }
+                  onClick={() => {
+                    signOut(auth).then(() => {
+                      window.location.href = "/login";
+                    });
+                  }}
                 >
                   <LogOut className="w-5 h-5" /> Logout
                 </button>
@@ -217,116 +382,183 @@ export default function MaintenanceDashboard() {
         )}
       </div>
 
-      {/* Change Password Modal */}
-      {showChangePassword && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
-          <Card className="w-full max-w-sm p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
-            <X
-              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
-              onClick={() => setShowChangePassword(false)}
-            />
-            <h2 className="text-xl font-extrabold mb-4 flex items-center gap-2 text-blue-700 drop-shadow-lg">
-              <Key className="w-6 h-6" /> Change Password
-            </h2>
-            <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
-              <Input
-                type="password"
-                name="currentPassword"
-                placeholder="Enter current password"
-                required
-                className="rounded-lg shadow-inner"
-              />
-              <Input
-                type="password"
-                name="newPassword"
-                placeholder="Enter new password"
-                required
-                minLength={6}
-                className="rounded-lg shadow-inner"
-              />
-              {passwordChangeError && (
-                <div className="text-sm text-red-600">{passwordChangeError}</div>
-              )}
-              {passwordChangeSuccess && (
-                <div className="text-sm text-green-600">{passwordChangeSuccess}</div>
-              )}
-              <div className="flex gap-4 justify-end mt-2">
-                <Button variant="outline" onClick={() => setShowChangePassword(false)}
-                  className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-blue-100 transition-all duration-150">
-                  Cancel
-                </Button>
-                <Button type="submit"
-                  className="rounded-xl font-bold shadow bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:scale-105 hover:from-blue-700 hover:to-blue-500 transition-all duration-150">
-                  Update Password
-                </Button>
+      {/* Export to Excel Button */}
+      <div className="flex justify-end max-w-7xl mx-auto mt-4 px-6">
+        <Button
+          variant="outline"
+          onClick={() => setExportModalOpen(true)}
+          className="flex items-center gap-2 rounded-xl border border-blue-600 bg-blue-50 px-4 py-2 font-semibold text-blue-700 shadow hover:bg-blue-100 hover:text-blue-800 transition"
+        >
+          <PlusCircle className="h-5 w-5" />
+          Export to Excel
+        </Button>
+      </div>
+
+      <Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Export Complaints to Excel</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleExportSubmit}>
+            <div className="grid gap-4 py-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Category</label>
+                <select
+                  value={filterCategory}
+                  onChange={e => setFilterCategory(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 p-2"
+                >
+                  {categories.map(cat => (
+                    <option key={cat.name} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
               </div>
-            </form>
-          </Card>
-        </div>
-      )}
+              <div>
+                <label className="block text-sm font-medium mb-1">Status</label>
+                <select
+                  value={filterStatus}
+                  onChange={e => setFilterStatus(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 p-2"
+                >
+                  {statuses.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Priority</label>
+                <select
+                  value={filterPriority}
+                  onChange={e => setFilterPriority(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 p-2"
+                >
+                  {priorities.map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">From Date</label>
+                <Calendar
+                  mode="single"
+                  selected={filterFromDate}
+                  onSelect={setFilterFromDate}
+                  placeholder="Select From Date"
+                  className="w-full rounded-md border border-gray-300 p-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">To Date</label>
+                <Calendar
+                  mode="single"
+                  selected={filterToDate}
+                  onSelect={setFilterToDate}
+                  placeholder="Select To Date"
+                  className="w-full rounded-md border border-gray-300 p-2"
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClearFilters}
+                className="rounded-xl"
+              >
+                Clear Filters
+              </Button>
+              <Button type="submit" className="rounded-xl">
+                Export
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Tabs */}
       <div className="flex justify-center mt-8">
-        <div className="flex bg-[#ececec] rounded-2xl overflow-hidden w-[560px]">
+        <div className="flex bg-[#ececec] rounded-2xl overflow-hidden w-[700px]">
           <button
-            className={`flex-1 py-2 text-lg font-semibold transition-all ${
-              activeTab === "Overview"
+            className={`flex-1 py-2 text-lg font-semibold transition-all ${activeTab === "Overview"
                 ? "bg-white text-black shadow"
                 : "text-gray-500"
-            }`}
+              }`}
             onClick={() => setActiveTab("Overview")}
           >
             Overview
           </button>
           <button
-            className={`flex-1 py-2 text-lg font-semibold transition-all ${
-              activeTab === "AllComplaints"
+            className={`flex-1 py-2 text-lg font-semibold transition-all ${activeTab === "AllComplaints"
                 ? "bg-white text-black shadow"
                 : "text-gray-500"
-            }`}
+              }`}
             onClick={() => setActiveTab("AllComplaints")}
           >
             All Complaints
+          </button>
+          <button
+            className={`flex-1 py-2 text-lg font-semibold transition-all ${activeTab === "Supervisors"
+                ? "bg-white text-black shadow"
+                : "text-gray-500"
+              }`}
+            onClick={() => setActiveTab("Supervisors")}
+          >
+            Supervisors
           </button>
         </div>
       </div>
 
       {/* Overview Tab */}
       {activeTab === "Overview" && (
-        <div className="max-w-4xl mx-auto mt-8 space-y-8">
-          <Card className="p-8">
-            <div className="text-xl font-bold mb-2">Welcome, {userName}!</div>
-            <div className="text-sm text-gray-500 mb-6">
-              Manage and resolve maintenance requests from students and staff
-            </div>
-            <div className="grid grid-cols-5 gap-4">
-              <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
-                <span className="font-bold text-2xl">{total}</span>
-                <span className="text-gray-500">Total Complaints</span>
-                <Settings className="mt-2 text-gray-400" />
+        <div className="max-w-6xl mx-auto mt-8 space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Profile Card */}
+            <ProfileCard
+              userName={userName}
+              userEmail={userEmail}
+              userRole="Maintenance Staff"
+              complaintsHandled={resolved}
+              pendingComplaints={pending}
+              inProgressComplaints={progress}
+            />
+
+            {/* Stats Card */}
+            <Card className="p-8 lg:col-span-2">
+              <div className="text-xl font-bold mb-2">Welcome, {userName}!</div>
+              <div className="text-sm text-gray-500 mb-6">
+                Manage and resolve maintenance requests from students and staff
               </div>
-              <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
-                <span className="font-bold text-2xl text-orange-500">{pending}</span>
-                <span className="text-gray-500">Pending</span>
-                <Clock className="mt-2 text-orange-400" />
+              <div className="grid grid-cols-5 gap-4">
+                <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
+                  <span className="font-bold text-2xl">{total}</span>
+                  <span className="text-gray-500">Total Complaints</span>
+                  <Settings className="mt-2 text-gray-400" />
+                </div>
+                <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
+                  <span className="font-bold text-2xl text-orange-500">{pending}</span>
+                  <span className="text-gray-500">Pending</span>
+                  <Clock className="mt-2 text-orange-400" />
+                </div>
+                <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
+                  <span className="font-bold text-2xl text-blue-600">{progress}</span>
+                  <span className="text-gray-500">In Progress</span>
+                  <Clock className="mt-2 text-blue-500" />
+                </div>
+                <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
+                  <span className="font-bold text-2xl text-green-600">{resolved}</span>
+                  <span className="text-gray-500">Resolved</span>
+                  <CheckCircle className="mt-2 text-green-500" />
+                </div>
+                <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
+                  <span className="font-bold text-2xl text-violet-600">{reopened}</span>
+                  <span className="text-gray-500">Reopened</span>
+                  <Clock className="mt-2 text-violet-500" />
+                </div>
               </div>
-              <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
-                <span className="font-bold text-2xl text-blue-600">{progress}</span>
-                <span className="text-gray-500">In Progress</span>
-                <Clock className="mt-2 text-blue-500" />
-              </div>
-              <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
-                <span className="font-bold text-2xl text-green-600">{resolved}</span>
-                <span className="text-gray-500">Resolved</span>
-                <CheckCircle className="mt-2 text-green-500" />
-              </div>
-              <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
-                <span className="font-bold text-2xl text-violet-600">{reopened}</span>
-                <span className="text-gray-500">Reopened</span>
-                <Clock className="mt-2 text-violet-500" />
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
+
+          {/* Recent Complaints */}
           <Card className="p-7">
             <div className="font-bold text-lg mb-4">Recent Complaints</div>
             <div className="space-y-3">
@@ -388,7 +620,7 @@ export default function MaintenanceDashboard() {
                   className="rounded-xl px-3 py-2 w-full bg-white border"
                 >
                   {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat.name} value={cat.name}>{cat.name}</option>
                   ))}
                 </select>
               </div>
@@ -493,6 +725,218 @@ export default function MaintenanceDashboard() {
         </div>
       )}
 
+      {/* Supervisors Tab */}
+      {activeTab === "Supervisors" && (
+        <div className="max-w-6xl mx-auto mt-8 space-y-8">
+          {/* Category Cards */}
+          {!selectedCategory && (
+            <Card className="p-6">
+              <h2 className="font-bold text-lg mb-4">Select a Category</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {categories.filter(cat => cat.name !== "All Categories").map((category) => {
+                  const categoryComplaints = getSupervisorComplaintsByCategory(category.name);
+                  const assigned = categoryComplaints.filter(c => c.assigned).length;
+                  const pending = categoryComplaints.filter(c => c.status === "Pending").length;
+                  const progress = categoryComplaints.filter(c => c.status === "In Progress").length;
+                  const resolved = categoryComplaints.filter(c => c.status === "Resolved").length;
+
+                  return (
+                    <Card
+                      key={category.name}
+                      className="p-4 shadow-3xl rounded-2xl cursor-pointer hover:scale-105 transition-all duration-200"
+                      onClick={() => setSelectedCategory(category.name)}
+                    >
+                      <h3 className="font-semibold text-lg flex items-center gap-2">
+                        <span>{category.icon}</span>
+                        {category.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-3">{category.desc}</p>
+
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="font-medium">Total Complaints:</span>
+                          <span className="font-semibold">{categoryComplaints.length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-orange-600">Pending:</span>
+                          <span>{pending}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-600">In Progress:</span>
+                          <span>{progress}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-green-600">Resolved:</span>
+                          <span>{resolved}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">Assigned:</span>
+                          <span>{assigned}</span>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
+          {/* Selected Category View */}
+          {selectedCategory && (
+            <div className="space-y-6">
+              {/* Back Button and Filters */}
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold"
+                  >
+                    ← Back to Categories
+                  </button>
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    {categories.find(cat => cat.name === selectedCategory)?.icon}
+                    {selectedCategory} - Supervisor View
+                  </h2>
+                </div>
+
+                {/* Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <div className="font-medium text-sm mb-1">Filter by Supervisor</div>
+                    <Input
+                      placeholder="Search supervisor..."
+                      value={supervisorFilter}
+                      onChange={(e) => setSupervisorFilter(e.target.value)}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm mb-1">Filter by Status</div>
+                    <select
+                      value={statusFilter}
+                      onChange={e => setStatusFilter(e.target.value)}
+                      className="rounded-xl px-3 py-2 w-full bg-white border"
+                    >
+                      {statuses.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSupervisorFilter("");
+                        setStatusFilter("All Status");
+                      }}
+                      className="rounded-xl"
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Supervisors and Their Complaints */}
+              <Card className="p-6">
+                <h3 className="font-bold text-lg mb-4">Supervisors and Assigned Complaints</h3>
+
+                {(() => {
+                  const categoryComplaints = getSupervisorComplaintsByCategory(selectedCategory);
+
+                  // Get unique supervisors for this category
+                  const supervisors = [...new Set(categoryComplaints
+                    .filter(comp => comp.assigned)
+                    .map(comp => comp.assigned)
+                  )].sort();
+
+                  if (supervisors.length === 0) {
+                    return (
+                      <div className="text-center text-gray-400 py-8">
+                        No supervisors assigned to {selectedCategory} complaints yet.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-6">
+                      {supervisors.map((supervisor) => {
+                        // Filter complaints for this supervisor
+                        let supervisorComplaints = categoryComplaints.filter(
+                          comp => comp.assigned === supervisor
+                        );
+
+                        // Apply status filter
+                        if (statusFilter !== "All Status") {
+                          supervisorComplaints = supervisorComplaints.filter(
+                            comp => comp.status === statusFilter
+                          );
+                        }
+
+                        // Apply supervisor name filter
+                        if (supervisorFilter && !supervisor.toLowerCase().includes(supervisorFilter.toLowerCase())) {
+                          return null;
+                        }
+
+                        if (supervisorComplaints.length === 0) {
+                          return null;
+                        }
+
+                        return (
+                          <Card key={supervisor} className="p-4 shadow-3xl rounded-2xl">
+                            <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                              <User className="w-5 h-5" />
+                              {supervisor}
+                            </h4>
+                            <div className="space-y-3">
+                              {supervisorComplaints.map((comp) => (
+                                <div key={comp.id} className="bg-white rounded-xl p-3 shadow">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="font-medium">{comp.subject}</span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${comp.status === "Pending" ? "bg-orange-100 text-orange-700" :
+                                        comp.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                                          "bg-green-100 text-green-700"
+                                      }`}>
+                                      {comp.status}
+                                    </span>
+                                  </div>
+                                  <div className="text-sm text-gray-600">{comp.description}</div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    Created: {formatDateTimeFull(comp.createdAt)}
+                                  </div>
+                                  <div className="flex gap-2 mt-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-xs"
+                                      onClick={() => setViewModal(comp)}
+                                    >
+                                      View
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-xs"
+                                      onClick={() => setUpdateModal(comp)}
+                                    >
+                                      Update
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </Card>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* View Complaint Modal */}
       {viewModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
@@ -501,22 +945,43 @@ export default function MaintenanceDashboard() {
               className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
               onClick={() => setViewModal(null)}
             />
-            <h2 className="text-2xl font-extrabold mb-4">{viewModal.subject}</h2>
-            <p className="mb-2"><strong>Category:</strong> {viewModal.category}</p>
-            <p className="mb-2"><strong>Priority:</strong> {viewModal.priority}</p>
-            <p className="mb-2"><strong>Status:</strong> {viewModal.status}</p>
-            <p className="mb-2"><strong>Building:</strong> {viewModal.building}</p>
-            <p className="mb-2"><strong>Location:</strong> {viewModal.location}</p>
-            <p className="mb-2"><strong>User:</strong> {viewModal.userName || viewModal.user}</p>
-            <p className="mb-2"><strong>Description:</strong> {viewModal.description}</p>
-            <p className="mb-2 text-gray-500 flex items-center gap-1">
-              <Clock className="w-4 h-4" /> Submitted at: {formatDateTimeFull(viewModal.createdAt)}
-            </p>
-            {viewModal.assigned && (
-              <div className="mb-2 text-blue-700">
-                <strong>Assigned to:</strong> {viewModal.assigned}
-              </div>
-            )}
+            <h2 className="text-xl font-extrabold mb-4 text-blue-700 drop-shadow-lg">
+              Complaint Details
+            </h2>
+            <div className="space-y-3">
+              <p><strong>Subject:</strong> {viewModal.subject}</p>
+              <p><strong>Category:</strong> {viewModal.category}</p>
+              <p><strong>Priority:</strong>
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${viewModal.priority === "High" ? "bg-red-100 text-red-700" :
+                    viewModal.priority === "Medium" ? "bg-yellow-100 text-yellow-700" :
+                      "bg-green-100 text-green-700"
+                  }`}>
+                  {viewModal.priority}
+                </span>
+              </p>
+              <p><strong>Status:</strong>
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${viewModal.status === "Pending" ? "bg-orange-100 text-orange-700" :
+                    viewModal.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                      "bg-green-100 text-green-700"
+                  }`}>
+                  {viewModal.status}
+                </span>
+              </p>
+              <p><strong>Building:</strong> {viewModal.building}</p>
+              <p><strong>Location:</strong> {viewModal.location}</p>
+              <p><strong>Description:</strong> {viewModal.description}</p>
+              <p><strong>Submitted by:</strong> {viewModal.userName || viewModal.user}</p>
+              <p><strong>Submitted:</strong> {formatDateTimeFull(viewModal.createdAt)}</p>
+              {viewModal.assigned && (
+                <p><strong>Assigned to:</strong> {viewModal.assigned}</p>
+              )}
+            </div>
+            <Button
+              onClick={() => setViewModal(null)}
+              className="mt-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:from-blue-700 hover:to-blue-500 rounded-2xl font-bold shadow-lg"
+            >
+              Close
+            </Button>
           </Card>
         </div>
       )}
@@ -524,73 +989,66 @@ export default function MaintenanceDashboard() {
       {/* Update Complaint Modal */}
       {updateModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
-          <Card className="w-full max-w-lg p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-violet-50 to-white animate-scaleIn">
+          <Card className="w-full max-w-md p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
             <X
               className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
               onClick={() => setUpdateModal(null)}
             />
-            <h2 className="text-2xl font-extrabold mb-4">
-              Update Complaint
+            <h2 className="text-xl font-extrabold mb-4 text-blue-700 drop-shadow-lg">
+              Update Complaint Status
             </h2>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const status = e.target.status.value;
-                const priority = e.target.priority.value;
-                const assigned = e.target.assigned.value;
-                await handleUpdateComplaint(updateModal.id, {
-                  status,
-                  priority,
-                  assigned,
-                });
-              }}
-              className="flex flex-col gap-4"
-            >
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const updates = {
+                status: formData.get("status"),
+                assigned: formData.get("assigned") || null,
+                notes: formData.get("notes") || ""
+              };
+              handleUpdateComplaint(updateModal.id, updates);
+            }} className="space-y-4">
               <div>
-                <label className="font-semibold">Status</label>
+                <label className="block text-sm font-medium mb-1">Status</label>
                 <select
                   name="status"
                   defaultValue={updateModal.status}
-                  className="rounded-xl px-3 py-2 w-full bg-white border"
+                  className="w-full p-2 rounded-xl border"
+                  required
                 >
-                  {statuses.filter(s => s !== "All Status").map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
                 </select>
               </div>
               <div>
-                <label className="font-semibold">Priority</label>
-                <select
-                  name="priority"
-                  defaultValue={updateModal.priority}
-                  className="rounded-xl px-3 py-2 w-full bg-white border"
-                >
-                  {priorities.filter(p => p !== "All Priority").map(p => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="font-semibold">Assigned To (optional)</label>
+                <label className="block text-sm font-medium mb-1">Assign to Supervisor (optional)</label>
                 <Input
                   name="assigned"
+                  placeholder="Supervisor name"
                   defaultValue={updateModal.assigned || ""}
                   className="rounded-xl"
-                  placeholder="Enter staff name"
                 />
               </div>
-              <div className="flex gap-4 justify-end mt-2">
+              <div>
+                <label className="block text-sm font-medium mb-1">Notes (optional)</label>
+                <textarea
+                  name="notes"
+                  placeholder="Add any notes..."
+                  defaultValue={updateModal.notes || ""}
+                  className="w-full p-2 rounded-xl border min-h-[80px]"
+                />
+              </div>
+              <div className="flex gap-4 justify-end">
                 <Button
                   variant="outline"
                   onClick={() => setUpdateModal(null)}
-                  className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-violet-100 transition-all duration-150"
-                  type="button"
+                  className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-blue-100 transition-all duration-150"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="rounded-xl font-bold shadow bg-gradient-to-r from-violet-600 to-violet-400 text-white hover:scale-105 hover:from-violet-700 hover:to-violet-500 transition-all duration-150"
+                  className="rounded-xl font-bold shadow bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:scale-105 hover:from-blue-700 hover:to-blue-500 transition-all duration-150"
                 >
                   Update
                 </Button>
