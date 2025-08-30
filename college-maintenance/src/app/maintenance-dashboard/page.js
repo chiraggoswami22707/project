@@ -8,6 +8,7 @@ import {
   updateDoc,
   doc,
   getDocs,
+  getDoc,
   query,
   where,
   Timestamp,
@@ -264,7 +265,7 @@ export default function MaintenanceDashboard() {
           c.description || "",
           c.priority || "",
           c.assigned || "",
-          c.status || "",
+          c.adminFinalStatus || c.status || "",
           c.createdAt ? new Date(c.createdAt).toISOString().slice(0, 10) : "",
           c.preferredTimeSlot || "",
           c.resolvedAt ? new Date(c.resolvedAt).toISOString().slice(0, 10) : ""
@@ -359,14 +360,37 @@ export default function MaintenanceDashboard() {
   );
 
   // Get supervisor complaints (complaints assigned to the logged-in supervisor)
+  // Use adminFinalStatus if present, else fallback to status
+  const getEffectiveStatus = (comp) => comp.adminFinalStatus || comp.status;
+
+  // Get all complaints assigned to any supervisor (not just current user)
   const supervisorComplaints = complaints.filter(comp =>
-    comp.assigned === userName
+    comp.assigned && comp.assigned.trim() !== ""
   );
 
   // Get supervisor complaints by category
   const getSupervisorComplaintsByCategory = (selectedCategory) => {
     if (selectedCategory === "All Categories") return supervisorComplaints;
     return supervisorComplaints.filter(comp => comp.category === selectedCategory);
+  };
+
+  // Apply filters in supervisor view
+  const applySupervisorFilters = (complaintsList) => {
+    let filtered = complaintsList;
+
+    // Filter by supervisor name
+    if (supervisorFilter.trim() !== "") {
+      filtered = filtered.filter(comp =>
+        comp.assigned && comp.assigned.toLowerCase().includes(supervisorFilter.toLowerCase())
+      );
+    }
+
+    // Filter by admin final status or status
+    if (statusFilter !== "All Status") {
+      filtered = filtered.filter(comp => getEffectiveStatus(comp) === statusFilter);
+    }
+
+    return filtered;
   };
 
   const total = complaints.length;
@@ -665,12 +689,12 @@ export default function MaintenanceDashboard() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="font-semibold text-base">{comp.subject}</div>
-                    <span className={`px-3 py-1 rounded-full font-semibold text-xs ${comp.priority === "High" ? "bg-red-100 text-red-700" : comp.priority === "Medium" ? "bg-yellow-100 text-yellow-700" : comp.priority === "Low" ? "bg-green-100 text-green-700" : "bg-violet-100 text-violet-700"}`}>
-                      {comp.priority}
-                    </span>
-                    <span className={`px-3 py-1 rounded-full font-semibold text-xs ${comp.status === "Pending" ? "bg-orange-100 text-orange-700" : comp.status === "In Progress" ? "bg-blue-100 text-blue-700" : comp.status === "Resolved" ? "bg-green-100 text-green-700" : "bg-violet-100 text-violet-700"}`}>
-                      {comp.status}
-                    </span>
+                  <span className={`px-3 py-1 rounded-full font-semibold text-xs ${comp.priority === "High" ? "bg-red-100 text-red-700" : comp.priority === "Medium" ? "bg-yellow-100 text-yellow-700" : comp.priority === "Low" ? "bg-green-100 text-green-700" : "bg-violet-100 text-violet-700"}`}>
+                    {comp.priority}
+                  </span>
+                  <span className={`px-3 py-1 rounded-full font-semibold text-xs ${getEffectiveStatus(comp) === "Pending" ? "bg-orange-100 text-orange-700" : getEffectiveStatus(comp) === "In Progress" ? "bg-blue-100 text-blue-700" : getEffectiveStatus(comp) === "Resolved" ? "bg-green-100 text-green-700" : "bg-violet-100 text-violet-700"}`}>
+                    {getEffectiveStatus(comp)}
+                  </span>
                   </div>
                   <div className="flex items-center gap-4 text-gray-500 text-sm mt-1">
                     <span className="flex items-center gap-1">
@@ -816,6 +840,20 @@ export default function MaintenanceDashboard() {
                   No complaints found for selected filters.
                 </div>
               )}
+
+              {/* Add no complaints message for supervisor view */}
+              {activeTab === "Supervisors" && selectedCategory && (() => {
+                const categoryComplaints = getSupervisorComplaintsByCategory(selectedCategory);
+                const filtered = applySupervisorFilters(categoryComplaints);
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center text-gray-400 text-base py-8">
+                      No complaints available for this selection.
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </Card>
         </div>
@@ -830,7 +868,8 @@ export default function MaintenanceDashboard() {
               <h2 className="font-bold text-lg mb-4">Select a Category</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {categories.filter(cat => cat.name !== "All Categories").map((category) => {
-                  const categoryComplaints = getSupervisorComplaintsByCategory(category.name);
+                  // Filter complaints for this category from all complaints, not just supervisorComplaints
+                  const categoryComplaints = complaints.filter(comp => comp.category === category.name);
                   const assigned = categoryComplaints.filter(c => c.assigned).length;
                   const pending = categoryComplaints.filter(c => c.status === "Pending").length;
                   const progress = categoryComplaints.filter(c => c.status === "In Progress").length;
@@ -958,21 +997,21 @@ export default function MaintenanceDashboard() {
                     <div className="space-y-6">
                       {supervisors.map((supervisor) => {
                         // Filter complaints for this supervisor
-                        let supervisorComplaints = categoryComplaints.filter(
-                          comp => comp.assigned === supervisor
-                        );
+                  let supervisorComplaints = categoryComplaints.filter(
+                    comp => comp.assigned && comp.assigned === supervisor
+                  );
 
-                        // Apply status filter
-                        if (statusFilter !== "All Status") {
-                          supervisorComplaints = supervisorComplaints.filter(
-                            comp => comp.status === statusFilter
-                          );
-                        }
+                  // Apply supervisor name filter
+                  if (supervisorFilter && !supervisor.toLowerCase().includes(supervisorFilter.toLowerCase())) {
+                    return null;
+                  }
 
-                        // Apply supervisor name filter
-                        if (supervisorFilter && !supervisor.toLowerCase().includes(supervisorFilter.toLowerCase())) {
-                          return null;
-                        }
+                  // Apply status filter
+                  if (statusFilter !== "All Status") {
+                    supervisorComplaints = supervisorComplaints.filter(
+                      comp => (comp.adminFinalStatus || comp.status) === statusFilter
+                    );
+                  }
 
                         if (supervisorComplaints.length === 0) {
                           return null;
@@ -989,11 +1028,14 @@ export default function MaintenanceDashboard() {
                                 <div key={comp.id} className="bg-white rounded-xl p-3 shadow">
                                   <div className="flex items-center gap-2 mb-2">
                                     <span className="font-medium">{comp.subject}</span>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${comp.status === "Pending" ? "bg-orange-100 text-orange-700" :
-                                        comp.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                                          "bg-green-100 text-green-700"
-                                      }`}>
-                                      {comp.status}
+                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                      (comp.adminFinalStatus || comp.status) === "Pending" ? "bg-orange-100 text-orange-700" :
+                                      (comp.adminFinalStatus || comp.status) === "In Progress" ? "bg-blue-100 text-blue-700" :
+                                      (comp.adminFinalStatus || comp.status) === "Resolved" ? "bg-green-100 text-green-700" :
+                                      (comp.adminFinalStatus || comp.status) === "Reopened" ? "bg-violet-100 text-violet-700" :
+                                      "bg-gray-100 text-gray-700"
+                                    }`}>
+                                      {comp.adminFinalStatus || comp.status}
                                     </span>
                                   </div>
                                   <div className="text-sm text-gray-600">{comp.description}</div>
@@ -1056,12 +1098,12 @@ export default function MaintenanceDashboard() {
                 </span>
               </p>
               <p><strong>Status:</strong>
-                <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${viewModal.status === "Pending" ? "bg-orange-100 text-orange-700" :
-                    viewModal.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                      "bg-green-100 text-green-700"
-                  }`}>
-                  {viewModal.status}
-                </span>
+              <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${getEffectiveStatus(viewModal) === "Pending" ? "bg-orange-100 text-orange-700" :
+                  getEffectiveStatus(viewModal) === "In Progress" ? "bg-blue-100 text-blue-700" :
+                    "bg-green-100 text-green-700"
+                }`}>
+                {getEffectiveStatus(viewModal)}
+              </span>
               </p>
               <p><strong>Building:</strong> {viewModal.building}</p>
               <p><strong>Location:</strong> {viewModal.location}</p>
