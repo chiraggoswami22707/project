@@ -13,7 +13,6 @@
     appId: "1:84923083315:web:8acc090790f72acd9ed146"
   };
 
-  // ✅ ek hi baar app initialize kar
   const app = initializeApp(firebaseConfig);
 
   export const auth = getAuth(app);

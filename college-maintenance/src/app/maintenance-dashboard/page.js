@@ -123,50 +123,117 @@ export default function MaintenanceDashboard() {
   };
 
   // Handler for export form submit
-
   const handleExportSubmit = async (e) => {
     e.preventDefault();
 
-    let q = collection(db, "complaints");
-    const constraints = [];
-
-    if (filterCategory !== "All Categories") {
-      constraints.push(where("category", "==", filterCategory));
-    }
-    if (filterStatus !== "All Status") {
-      constraints.push(where("status", "==", filterStatus));
-    }
-    if (filterPriority !== "All Priority") {
-      constraints.push(where("priority", "==", filterPriority));
-    }
-
-    // Apply date range filters properly
-    if (filterFromDate) {
-      const fromDate = new Date(filterFromDate);
-      fromDate.setHours(0, 0, 0, 0);
-      constraints.push(where("createdAt", ">=", Timestamp.fromDate(fromDate)));
-    }
-    if (filterToDate) {
-      const toDate = new Date(filterToDate);
-      toDate.setHours(23, 59, 59, 999);
-      constraints.push(where("createdAt", "<=", Timestamp.fromDate(toDate)));
-    }
-
-    // Remove invalid Firestore '!=' filter on createdAt
-    // constraints.push(where("createdAt", "!=", null));
-
-    if (constraints.length > 0) {
-      q = query(q, ...constraints);
-    }
-
     try {
+      console.log("Export filters:", {
+        fromDate: filterFromDate,
+        toDate: filterToDate,
+        category: filterCategory,
+        status: filterStatus,
+        priority: filterPriority
+      });
+
+      // Helper function to parse date from dd-MM-yyyy to Date object
+      function parseDateString(dateStr) {
+        if (!dateStr) return null;
+        if (typeof dateStr !== "string") return null;
+        const parts = dateStr.split("-");
+        if (parts.length !== 3) return null;
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // Month is zero-based
+        const year = parseInt(parts[2], 10);
+        return new Date(year, month, day);
+      }
+
+      // Parse dates correctly from UI format
+      const fromDateParsed = parseDateString(filterFromDate);
+      const toDateParsed = parseDateString(filterToDate);
+
+      // First, get ALL complaints to debug
+      const allComplaintsQuery = collection(db, "complaints");
+      const allSnapshot = await getDocs(allComplaintsQuery);
+      console.log("Total complaints in database:", allSnapshot.size);
+
+      // Build query with filters
+      let q = collection(db, "complaints");
+      const constraints = [];
+
+      // Apply category filter
+      if (filterCategory !== "All Categories") {
+        constraints.push(where("category", "==", filterCategory));
+      }
+      
+      // Apply status filter
+      if (filterStatus !== "All Status") {
+        constraints.push(where("status", "==", filterStatus));
+      }
+      
+      // Apply priority filter
+      if (filterPriority !== "All Priority") {
+        constraints.push(where("priority", "==", filterPriority));
+      }
+
+      // Apply date range filters
+      if (fromDateParsed || toDateParsed) {
+        if (fromDateParsed && toDateParsed) {
+          // Both dates selected - range filter
+          const fromDate = new Date(fromDateParsed);
+          fromDate.setHours(0, 0, 0, 0);
+          const toDate = new Date(toDateParsed);
+          toDate.setHours(23, 59, 59, 999);
+          constraints.push(where("createdAt", ">=", Timestamp.fromDate(fromDate)));
+          constraints.push(where("createdAt", "<=", Timestamp.fromDate(toDate)));
+        } else if (fromDateParsed) {
+          // Only from date selected
+          const fromDate = new Date(fromDateParsed);
+          fromDate.setHours(0, 0, 0, 0);
+          constraints.push(where("createdAt", ">=", Timestamp.fromDate(fromDate)));
+        } else if (toDateParsed) {
+          // Only to date selected
+          const toDate = new Date(toDateParsed);
+          toDate.setHours(23, 59, 59, 999);
+          constraints.push(where("createdAt", "<=", Timestamp.fromDate(toDate)));
+        }
+      }
+
+      // Build the query with constraints
+      if (constraints.length > 0) {
+        q = query(q, ...constraints);
+      }
+
       const querySnapshot = await getDocs(q);
-      console.log("Number of complaints fetched for export:", querySnapshot.size);
-      let filteredData = querySnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(c => c.createdAt); // filter out docs without createdAt
+      console.log("Number of complaints after filtering:", querySnapshot.size);
+      
+      // Process the data for export
+      const filteredData = querySnapshot.docs.map(doc => {
+        const data = { id: doc.id, ...doc.data() };
+        
+        // Convert Firestore timestamps to JavaScript Date objects
+        if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+          data.createdAt = data.createdAt.toDate();
+        } else if (data.createdAt && data.createdAt.seconds) {
+          data.createdAt = new Date(data.createdAt.seconds * 1000);
+        }
+        
+        if (data.resolvedAt && typeof data.resolvedAt.toDate === 'function') {
+          data.resolvedAt = data.resolvedAt.toDate();
+        } else if (data.resolvedAt && data.resolvedAt.seconds) {
+          data.resolvedAt = new Date(data.resolvedAt.seconds * 1000);
+        }
+        
+        return data;
+      });
 
-
+      // Debug: Show sample dates
+      if (filteredData.length > 0) {
+        console.log("Sample complaint dates:", filteredData.slice(0, 3).map(c => ({
+          id: c.id,
+          createdAt: c.createdAt,
+          formatted: formatDateTimeFull(c.createdAt)
+        })));
+      }
 
       // Prepare data for Excel export
       const wsData = [
@@ -198,9 +265,9 @@ export default function MaintenanceDashboard() {
           c.priority || "",
           c.assigned || "",
           c.status || "",
-          c.createdAt ? (c.createdAt.seconds ? new Date(c.createdAt.seconds * 1000).toISOString().slice(0, 10) : new Date(c.createdAt).toISOString().slice(0, 10)) : "",
+          c.createdAt ? new Date(c.createdAt).toISOString().slice(0, 10) : "",
           c.preferredTimeSlot || "",
-          c.resolvedAt ? (c.resolvedAt.seconds ? new Date(c.resolvedAt.seconds * 1000).toISOString().slice(0, 10) : new Date(c.resolvedAt).toISOString().slice(0, 10)) : ""
+          c.resolvedAt ? new Date(c.resolvedAt).toISOString().slice(0, 10) : ""
         ])
       ];
 
@@ -226,16 +293,27 @@ export default function MaintenanceDashboard() {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Maintenance Complaints");
 
+      // Generate filename with filters
+      let filename = "Maintenance_Complaints";
+      if (filterCategory !== "All Categories") filename += `_${filterCategory}`;
+      if (filterStatus !== "All Status") filename += `_${filterStatus}`;
+      if (filterPriority !== "All Priority") filename += `_${filterPriority}`;
+      if (filterFromDate) filename += `_from_${format(filterFromDate, 'yyyy-MM-dd')}`;
+      if (filterToDate) filename += `_to_${format(filterToDate, 'yyyy-MM-dd')}`;
+      filename += ".xlsx";
+
       // Write workbook and trigger download
-      XLSX.writeFile(wb, "Maintenance_Complaints_Report.xlsx");
+      XLSX.writeFile(wb, filename);
 
       // Close modal after export
       setExportModalOpen(false);
       handleClearFilters();
 
+      alert(`Exported ${filteredData.length} complaints successfully!`);
+
     } catch (error) {
       console.error("Error exporting complaints:", error);
-      alert("Failed to export complaints. Please try again.");
+      alert("Failed to export complaints. Please try again. Error: " + error.message);
     }
   };
 
@@ -280,9 +358,9 @@ export default function MaintenanceDashboard() {
     && (dateFilter === "" || formatDateTimeFull(comp.createdAt).slice(0, 11) === formatDateTimeFull(dateFilter).slice(0, 11))
   );
 
-  // Get supervisor complaints (complaints from users with @sup.com email)
+  // Get supervisor complaints (complaints assigned to the logged-in supervisor)
   const supervisorComplaints = complaints.filter(comp =>
-    comp.email?.endsWith("@sup.com")
+    comp.assigned === userName
   );
 
   // Get supervisor complaints by category
@@ -298,8 +376,26 @@ export default function MaintenanceDashboard() {
   const reopened = complaints.filter((c) => c.status === "Reopened").length;
 
   const handleUpdateComplaint = async (id, updates) => {
-    await updateDoc(doc(db, "complaints", id), updates);
-    setUpdateModal(null);
+    try {
+      await updateDoc(doc(db, "complaints", id), updates);
+      setUpdateModal(null);
+
+      // Fetch updated complaint to sync with supervisor dashboard
+      const docRef = doc(db, "complaints", id);
+      const docSnap = await getDoc(docRef);
+      let updatedComplaint = null;
+      if (docSnap.exists()) {
+        updatedComplaint = { id: docSnap.id, ...docSnap.data() };
+      }
+
+      if (updatedComplaint) {
+        // Sync updated complaint with supervisor dashboard or other systems if needed
+        // For now, just update local state
+        setComplaints(prev => prev.map(comp => comp.id === id ? updatedComplaint : comp));
+      }
+    } catch (error) {
+      console.error("Error updating complaint:", error);
+    }
   };
 
   const handleChangePassword = async (e) => {

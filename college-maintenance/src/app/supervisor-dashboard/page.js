@@ -171,7 +171,8 @@ export default function SupervisorDashboard() {
   // Sync complaint with maintenance portal
   const syncComplaintWithMaintenancePortal = async (complaintData) => {
     try {
-      const response = await fetch("https://maintenance-portal.example.com/api/complaints", { // Update this URL if necessary
+      // Replace the URL with the actual maintenance portal API endpoint
+      const response = await fetch("http://localhost:3000/api/maintenance-portal/complaints", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
