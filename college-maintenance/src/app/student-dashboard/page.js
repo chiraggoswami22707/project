@@ -346,11 +346,111 @@ export default function StudentDashboard() {
   }
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white p-6">
       {/* Profile Card Fixed on Left Side */}
       {userData && (
         <div className="fixed left-6 top-6 z-40 w-80">
           <ProfileCard user={userData} />
+=======
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-blue-100 to-white p-6">
+      {/* Navbar */}
+<<<<<<< HEAD
+      <div className="flex justify-between items-center mb-10 w-full max-w-6xl bg-white p-4 rounded-2xl shadow-3xl" style={{
+        boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06)"
+      }}>
+        <h1 className="text-3xl font-extrabold text-gray-800 drop-shadow-2xl" style={{
+          letterSpacing: "1px",
+          textShadow: "2px 2px 8px rgba(30,64,175,0.08)"
+        }}>
+          Graphic Era Hill University – Student / Staff Portal
+=======
+      <div className="flex justify-between items-center mb-10 w-full max-w-6xl bg-white p-4 rounded-2xl shadow-3xl">
+        <h1 className="text-3xl font-extrabold text-blue-700 drop-shadow-2xl">
+          Graphic Era Hill University – Student/Staff Dashboard
+>>>>>>> a86102beb14cf53a7a4741cae6552bbeef5cd227
+        </h1>
+        <div className="relative">
+          <div
+            className="flex items-center gap-3 cursor-pointer px-4 py-2 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 shadow-md hover:scale-105 hover:shadow-2xl transition-all duration-200"
+            onClick={() => setProfileDropdown((prev) => !prev)}
+            style={{ border: "1px solid #e0e7ff" }}
+          >
+            <User className="w-6 h-6 text-blue-700" />
+            <span className="font-semibold text-blue-700">{userName}</span>
+            <ChevronDown className="w-5 h-5 text-blue-600" />
+          </div>
+          {profileDropdown && (
+            <div className="absolute right-0 mt-2 bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-2xl z-50 min-w-[180px] border border-blue-100"
+              style={{ transform: "translateY(5px)", boxShadow: "0 2px 16px rgba(30,64,175,0.16)" }}>
+              <button
+                className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
+                onClick={() => {
+                  setShowChangePassword(true);
+                  setProfileDropdown(false);
+                }}
+              >
+                <Settings className="w-5 h-5" /> Change Password
+              </button>
+              <button
+                className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
+                onClick={() =>
+                  signOut(auth).then(() => (window.location.href = "/login"))
+                }
+              >
+                <LogOut className="w-5 h-5" /> Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
+          <Card className="w-full max-w-sm p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
+            <X
+              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
+              onClick={() => setShowChangePassword(false)}
+            />
+            <h2 className="text-xl font-extrabold mb-4 flex items-center gap-2 text-blue-700 drop-shadow-lg">
+              <Key className="w-6 h-6" /> Change Password
+            </h2>
+            <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
+              <Input
+                type="password"
+                name="currentPassword"
+                placeholder="Enter current password"
+                required
+                className="rounded-lg shadow-inner"
+              />
+              <Input
+                type="password"
+                name="newPassword"
+                placeholder="Enter new password"
+                required
+                minLength={6}
+                className="rounded-lg shadow-inner"
+              />
+              {passwordChangeError && (
+                <div className="text-sm text-red-600">{passwordChangeError}</div>
+              )}
+              {passwordChangeSuccess && (
+                <div className="text-sm text-green-600">{passwordChangeSuccess}</div>
+              )}
+              <div className="flex gap-4 justify-end mt-2">
+                <Button variant="outline" onClick={() => setShowChangePassword(false)}
+                  className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-blue-100 transition-all duration-150">
+                  Cancel
+                </Button>
+                <Button type="submit"
+                  className="rounded-xl font-bold shadow bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:scale-105 hover:from-blue-700 hover:to-blue-500 transition-all duration-150">
+                  Update Password
+                </Button>
+              </div>
+            </form>
+          </Card>
+>>>>>>> aaacd1c5ca0b5bfce4a3e12b8abbcbdfce8add3e
         </div>
       )}
 
