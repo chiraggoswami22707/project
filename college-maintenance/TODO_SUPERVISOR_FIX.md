@@ -1,56 +1,27 @@
-# Supervisor Dashboard Fix Implementation Plan
+# Supervisor Dashboard Fix Steps
 
-## Current Issues Identified:
-1. Supervisors tab not showing real complaints from Firebase
-2. Category-specific views not displaying correct complaints
-3. Filters not applying properly to fetched data
-4. No "No complaints available" message when no data exists
+## 1. Update Categories ✅
+- Add descriptions to categories in page.js.
 
-## Steps to Fix:
+## 2. Import Components ✅
+- Import ProfileCard and CategoryCard.
 
-### 1. Fix Supervisor Complaints Filtering
-- [ ] Ensure `supervisorComplaints` correctly filters complaints assigned to the logged-in supervisor
-- [ ] Fix the `getSupervisorComplaintsByCategory` function to properly filter by category
+## 3. Update Layout ✅
+- Change to flex row: left ProfileCard, right CategoryCard grid.
 
-### 2. Improve Category View Logic
-- [ ] Ensure category cards show correct complaint counts for each category
-- [ ] Fix the filtering logic when a specific category is selected
+## 4. Calculate Stats for Categories ✅
+- For each category, compute total, pending, inProgress, resolved, reopened counts.
 
-### 3. Apply Filters Correctly
-- [ ] Ensure supervisor name filter works on the fetched data
-- [ ] Ensure status filter applies correctly to supervisor complaints
-- [ ] Make sure date filters work with real-time data
+## 5. Integrate CategoryCard ✅
+- Use CategoryCard instead of custom divs.
+- Pass stats and onClick to select category.
 
-### 4. Add "No complaints available" Messages
-- [ ] Add appropriate messages when no complaints exist for supervisors
-- [ ] Add messages when no complaints exist for specific categories
+## 6. Handle Complaint Display ✅
+- On category select, show list below the grid.
 
-### 5. Maintain Design Consistency
-- [ ] Ensure the updated views match the existing dashboard design
-- [ ] Keep the same styling and layout patterns
+## 7. Add Export Functionality ✅
+- Add button to export complaints to CSV.
 
-## Files to Modify:
-- `project/college-maintenance/src/app/maintenance-dashboard/page.js`
-
-## Dependencies:
-- Firebase Firestore "complaints" collection
-- Existing complaint data structure with fields: category, assigned, status, etc.
-
-## Testing:
-- Verify complaints appear under correct categories
-- Test supervisor filtering functionality
-- Test status filtering
-- Verify "No complaints available" messages appear when appropriate
-- Ensure real-time updates work correctly
-
-## Progress:
-- [x] Step 1: Supervisor Complaints Filtering (COMPLETED)
-- [x] Step 2: Category View Logic (COMPLETED - Fixed category cards to show counts from all complaints)
-- [x] Step 3: Filter Application (COMPLETED - Fixed supervisor name and status filtering logic)
-- [ ] Step 4: Empty State Messages
-- [x] Step 5: Design Consistency (COMPLETED - Maintained existing design)
-
-## Completed Fixes:
-- ✅ Fixed category cards to show counts from ALL complaints, not just supervisorComplaints
-- ✅ Fixed filtering logic to apply supervisor name filter first, then status filter
-- ✅ Maintained design consistency throughout all changes
+## 8. Test and Verify
+- Ensure responsive layout.
+- Verify real-time updates.

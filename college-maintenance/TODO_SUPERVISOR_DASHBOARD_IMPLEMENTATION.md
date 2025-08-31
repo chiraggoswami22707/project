@@ -1,104 +1,70 @@
-# Supervisor Dashboard Implementation - COMPLETED ✅
+# Supervisor Dashboard Implementation Plan
 
-## ✅ Implementation Summary
+## Objective
+Update the supervisor dashboard to match the provided screenshot with full functionality and real-time complaints fetching from Firebase.
 
-### 🎯 **Core Features Implemented:**
+## Steps
 
-1. **Tab-Based Interface**
-   - ✅ Category-specific tabs (Electrical, Plumbing, Maintenance, Cleaning, Lab/Server)
-   - ✅ Dynamic complaint counts per category
-   - ✅ Responsive tab design with icons
+1. Update Categories
+   - Replace existing categories with the following:
+     - Electrical
+     - Plumbing
+     - Cleaning
+     - Security
+     - Internet
+     - Parking
+     - Other
+   - Include icons and descriptions as per the screenshot.
 
-2. **Table View with All Required Columns**
-   - ✅ Complaint ID (shortened)
-   - ✅ Date Submitted
-   - ✅ Building Name
-   - ✅ Room Number
-   - ✅ Complaint Type
-   - ✅ Reporter Name
-   - ✅ Reporter Type (Student/Staff)
-   - ✅ Final Status (Admin override respected)
-   - ✅ Action buttons (View/Update)
+2. Create ProfileCard Component
+   - Display supervisor's name, role, and email.
+   - Style to match the left card in the screenshot.
 
-3. **Advanced Filtering System**
-   - ✅ Date range filters (From/To)
-   - ✅ Status filter (All Status, Pending, In Progress, Resolved, Reopened)
-   - ✅ Building search filter
-   - ✅ Room search filter
-   - ✅ Clear all filters functionality
+3. Create CategoryCard Component
+   - Display category icon, name, description, and complaint count.
+   - Use color-coded badges for complaint counts.
+   - Style cards with rounded corners and subtle shadows.
+   - Make cards clickable to select category.
 
-4. **Summary Cards**
-   - ✅ Total Complaints
-   - ✅ Resolved Complaints
-   - ✅ Pending Complaints
-   - ✅ In Progress Complaints
-   - ✅ Color-coded statistics
+4. Update Supervisor Dashboard Page
+   - Replace tabs with a grid layout:
+     - Left side: ProfileCard
+     - Right side: CategoryCard grid
+   - Fetch complaints in real-time using Firebase onSnapshot.
+   - Filter complaints by assigned supervisor.
+   - Show complaint counts on category cards.
+   - On category card click, display complaints list below or in a modal.
 
-5. **Export Functionality**
-   - ✅ Excel export with all complaint data
-   - ✅ Includes Admin final status
-   - ✅ Formatted date columns
-   - ✅ Auto-generated filename with date
+5. Complaint List Display
+   - Show complaints for selected category.
+   - Include complaint details and status.
+   - Allow updating complaint status.
+   - Include export to Excel functionality.
 
-6. **Admin Status Override**
-   - ✅ `adminFinalStatus` takes precedence over supervisor/staff status
-   - ✅ All views show Admin's final decision
-   - ✅ Excel export reflects Admin's final status
+6. Modals
+   - Keep complaint details modal.
+   - Keep change password modal.
 
-7. **Enhanced UI/UX**
-   - ✅ Modern gradient design
-   - ✅ Responsive layout
-   - ✅ Hover effects and animations
-   - ✅ Status color coding
-   - ✅ Loading states
+7. Styling and Layout
+   - Background gradient from light blue to white.
+   - Use consistent fonts and colors matching screenshot.
+   - Responsive layout for different screen sizes.
 
-### 🔧 **Technical Implementation:**
+8. Testing
+   - Verify real-time updates from Firebase.
+   - Verify filtering and status updates.
+   - Verify modals and export functionality.
+   - Verify access control for supervisors.
 
-- **Components Created:**
-  - `CategoryTabContent.js` - Reusable component for each category tab
-  - Updated `supervisor-dashboard/page.js` - Main dashboard with tab system
+## Dependencies
+- Firebase Firestore for real-time data.
+- Existing UI components (Button, Card, etc.).
+- Lucide-react icons.
 
-- **Dependencies Added:**
-  - `date-fns` - For date formatting
-  - `xlsx` - For Excel export (already installed)
+## Follow-up
+- After implementation, review UI/UX for improvements.
+- Add pagination or lazy loading if needed for large data.
 
-- **Key Features:**
-  - Real-time complaint fetching
-  - Supervisor-specific complaint filtering
-  - Status update functionality
-  - Password change modal
-  - Complaint details modal
+---
 
-### 🎨 **UI Enhancements:**
-
-- Gradient backgrounds and cards
-- Color-coded status indicators
-- Responsive design for all screen sizes
-- Smooth animations and transitions
-- Professional typography and spacing
-
-### 🔒 **Security & Data:**
-
-- Supervisor authentication guard
-- Admin status override protection
-- Secure complaint data handling
-- Proper error handling
-
-## ✅ **Issues Resolved:**
-
-1. **Complaints not showing in supervisor tabs** - Fixed by implementing proper filtering logic
-2. **Admin status override** - Implemented `adminFinalStatus` precedence
-3. **Excel export** - Now includes Admin final status
-4. **Responsive design** - Works on all screen sizes
-
-## 🚀 **Ready for Use:**
-
-The supervisor dashboard is now fully functional with:
-- Category-based tabs
-- Comprehensive filtering
-- Excel export
-- Admin status override
-- Modern UI/UX
-- Mobile responsiveness
-
-All complaints assigned to the logged-in supervisor will now appear correctly in their respective category tabs, with proper filtering and export capabilities.
+Please confirm if you want me to proceed with implementing these steps one by one.

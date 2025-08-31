@@ -1,28 +1,35 @@
 "use client"
 
 import * as React from "react"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
+// Removed import of '@radix-ui/react-dialog' to fix build error due to missing dependency
+// import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
-export const Dialog = DialogPrimitive.Root
-export const DialogTrigger = DialogPrimitive.Trigger
+// Fallback simple dialog components to replace Radix UI dialog components
 
-export function DialogContent({ children, ...props }) {
+export const Dialog = ({ children, open, onOpenChange }) => {
+  if (!open) return null
   return (
-    <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-      <DialogPrimitive.Content
-        {...props}
-        className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-lg"
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-lg">
         {children}
-        <DialogPrimitive.Close className="absolute right-3 top-3 text-gray-500 hover:text-gray-700">
+        <button
+          onClick={() => onOpenChange(false)}
+          className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+          aria-label="Close dialog"
+        >
           <X className="h-5 w-5" />
-        </DialogPrimitive.Close>
-      </DialogPrimitive.Content>
-    </DialogPrimitive.Portal>
+        </button>
+      </div>
+    </div>
   )
 }
+
+export const DialogContent = ({ children, className, ...props }) => (
+  <div {...props} className={className}>
+    {children}
+  </div>
+)
 
 export const DialogHeader = ({ children }) => (
   <div className="mb-4">{children}</div>

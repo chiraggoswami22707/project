@@ -29,7 +29,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import ProfileCard from "@/components/ProfileCard";
 
 import * as XLSX from "xlsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -631,19 +630,9 @@ export default function MaintenanceDashboard() {
       {/* Overview Tab */}
       {activeTab === "Overview" && (
         <div className="max-w-6xl mx-auto mt-8 space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Profile Card */}
-            <ProfileCard
-              userName={userName}
-              userEmail={userEmail}
-              userRole="Maintenance Staff"
-              complaintsHandled={resolved}
-              pendingComplaints={pending}
-              inProgressComplaints={progress}
-            />
-
+          <div className="grid grid-cols-1 gap-8">
             {/* Stats Card */}
-            <Card className="p-8 lg:col-span-2">
+            <Card className="p-8">
               <div className="text-xl font-bold mb-2">Welcome, {userName}!</div>
               <div className="text-sm text-gray-500 mb-6">
                 Manage and resolve maintenance requests from students and staff

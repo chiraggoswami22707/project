@@ -4,131 +4,77 @@ import { useState, useEffect } from "react";
 import { db, auth } from "@/firebase/config";
 import {
   collection,
-  getDocs,
-  query,
-  where,
   updateDoc,
   doc,
-  Timestamp,
+  query,
+  onSnapshot,
 } from "firebase/firestore";
-import { onAuthStateChanged, signOut, updatePassword } from "firebase/auth";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import ProfileCard from "@/components/ProfileCard";
+import CategoryCard from "@/components/CategoryCard";
 import {
-  User,
-  LogOut,
-  FileText,
-  ClipboardList,
-  ChevronDown,
-  Settings,
-  Key,
-  X,
-  Calendar,
-  MapPin,
-  Clock,
-  Info,
-  Download,
-  Filter,
-  PlusCircle,
-} from "lucide-react";
-import * as XLSX from "xlsx";
-import { format } from "date-fns";
-import CategoryTabContent from "@/components/CategoryTabContent";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog";
 
-// Utility: Format date+time as "24 Aug 2025, 11:30 AM"
-function formatDateTimeFull(dateInput) {
-  if (!dateInput) return "N/A";
-  let date;
-  if (typeof dateInput === "object" && dateInput !== null) {
-    if (dateInput instanceof Date) {
-      date = dateInput;
-    } else if (dateInput.toDate) {
-      date = dateInput.toDate();
-    } else if (dateInput.seconds !== undefined) {
-      date = new Date(dateInput.seconds * 1000);
-    }
-  } else {
-    date = new Date(dateInput);
-  }
-  if (!date || isNaN(date.getTime())) return "N/A";
-  return date.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  }).replace(",", "");
-}
+// Removed import of '@radix-ui/react-dialog' to fix build error due to missing dependency
 
-// Utility: Format date only as "24 Aug 2025"
-function formatDateOnly(dateInput) {
-  if (!dateInput) return "N/A";
-  let date;
-  if (typeof dateInput === "object" && dateInput !== null) {
-    if (dateInput instanceof Date) {
-      date = dateInput;
-    } else if (dateInput.toDate) {
-      date = dateInput.toDate();
-    } else if (dateInput.seconds !== undefined) {
-      date = new Date(dateInput.seconds * 1000);
-    }
-  } else {
-    date = new Date(dateInput);
-  }
-  if (!date || isNaN(date.getTime())) return "N/A";
-  return date.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).replace(",", "");
-}
-
+// CATEGORY DATA
 const categories = [
-  { name: "Cleaning", icon: "🧹", desc: "Cleaning requests for rooms, halls, bathrooms, or any common area." },
-  { name: "Electrical", icon: "⚡", desc: "Issues related to lights, fuses, wiring, switches, sockets, and electrical failures." },
-  { name: "Plumbing", icon: "🚰", desc: "Problems like leaks, broken taps, clogged pipes, water supply issues, or drainage." },
-  { name: "Maintenance", icon: "🔧", desc: "General maintenance issues and repairs." },
-  { name: "Lab/Server", icon: "💻", desc: "Lab equipment, server issues, and technical problems." },
-  { name: "Others", icon: "❓", desc: "Any miscellaneous issue not fitting above categories." },
+  { name: "Electrical", icon: "⚡", color: "yellow", desc: "Issues related to electrical systems, wiring, and power supply." },
+  { name: "Plumbing", icon: "🔧", color: "blue", desc: "Problems with water pipes, faucets, and drainage." },
+  { name: "Cleaning", icon: "🧹", color: "green", desc: "Maintenance and cleaning services for facilities." },
+  { name: "Security", icon: "🛡️", color: "red", desc: "Concerns about safety, access control, and surveillance." },
+  { name: "Internet", icon: "📶", color: "purple", desc: "Network connectivity and Wi-Fi related issues." },
+  { name: "Parking", icon: "🚗", color: "orange", desc: "Parking space availability and vehicle-related problems." },
+  { name: "Other", icon: "🖥️", color: "gray", desc: "Miscellaneous complaints not covered by other categories." },
 ];
 
-const statusOptions = ["All Status", "Pending", "In Progress", "Resolved", "Reopened"];
+function formatDate(dateInput) {
+  if (!dateInput) return "N/A";
+  let date;
+  if (typeof dateInput === "object" && dateInput !== null) {
+    if (dateInput instanceof Date) date = dateInput;
+    else if (dateInput.toDate) date = dateInput.toDate();
+    else if (dateInput.seconds !== undefined) date = new Date(dateInput.seconds * 1000);
+  } else date = new Date(dateInput);
+  if (!date || isNaN(date.getTime())) return "N/A";
+  return date.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function statusClass(status) {
+  if (status === "Pending") return "bg-yellow-100 text-yellow-700";
+  if (status === "In Progress") return "bg-blue-100 text-blue-700";
+  if (status === "Resolved") return "bg-green-100 text-green-700";
+  if (status === "Reopened") return "bg-violet-100 text-violet-700";
+  return "bg-gray-100 text-gray-700";
+}
+function priorityClass(priority) {
+  if (priority === "High") return "bg-orange-100 text-orange-700";
+  if (priority === "Medium") return "bg-yellow-100 text-yellow-700";
+  if (priority === "Low") return "bg-green-100 text-green-700";
+  return "bg-gray-100 text-gray-700";
+}
+const getEffectiveStatus = (comp) => comp.adminFinalStatus || comp.status;
 
 export default function SupervisorDashboard() {
   const [complaints, setComplaints] = useState([]);
   const [userEmail, setUserEmail] = useState("");
-  const [userName, setUserName] = useState("");
-  const [profileDropdown, setProfileDropdown] = useState(false);
-  const [activeTab, setActiveTab] = useState("Electrical");
-  const [modalData, setModalData] = useState(null);
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [passwordChangeError, setPasswordChangeError] = useState("");
-  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [filters, setFilters] = useState({
+    status: "All Status",
+    priority: "All Priority",
+    date: "",
+  });
 
-  // Filter states
-  const [filterFromDate, setFilterFromDate] = useState("");
-  const [filterToDate, setFilterToDate] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All Status");
-  const [filterBuilding, setFilterBuilding] = useState("");
-  const [filterRoom, setFilterRoom] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-
-  // AUTH: set user email and userName
+  // AUTH GUARD
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUserEmail(user.email);
-        setUserName(user.displayName || user.email?.split("@")[0]);
-        // Redirect if not supervisor
-        if (!user.email.endsWith("@sup.com")) {
-          window.location.href = "/login";
-        }
+        if (!user.email.endsWith("@sup.com")) window.location.href = "/login";
       } else {
         setUserEmail("");
         window.location.href = "/login";
@@ -137,492 +83,218 @@ export default function SupervisorDashboard() {
     return () => unsubscribe();
   }, []);
 
-  // Fetch complaints assigned to this supervisor
+  // Real-time complaints fetch (assigned to supervisor)
   useEffect(() => {
-    const fetchComplaints = async () => {
-      try {
-        const q = query(collection(db, "complaints"));
-        const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map((doc) => {
-          const complaintData = doc.data();
-          return {
-            id: doc.id,
-            ...complaintData,
-            createdAt: complaintData.createdAt && complaintData.createdAt.toDate
-              ? complaintData.createdAt.toDate()
-              : complaintData.createdAt || null,
-          };
-        });
-
-        // Filter complaints assigned to this supervisor
-        const supervisorComplaints = data.filter(comp =>
-          comp.assigned && comp.assigned === userName
-        );
-
-        // Sort complaints by creation date (most recent first)
-        const sortedData = supervisorComplaints.sort((a, b) => {
-          const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
-          const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
-          return dateB - dateA; // Descending order (newest first)
-        });
-
-        setComplaints(sortedData);
-      } catch (error) {
-        console.error("Error fetching complaints:", error);
-      }
-    };
-    fetchComplaints();
-  }, [userName]);
-
-  // Use adminFinalStatus if present, else fallback to status
-  const getEffectiveStatus = (comp) => comp.adminFinalStatus || comp.status;
-
-  // Get reporter type (student/staff)
-  const getReporterType = (email) => {
-    if (email?.endsWith("@gmail.com")) return "Student";
-    if (email?.endsWith("@staff.com")) return "Staff";
-    return "Unknown";
-  };
-
-  // Filter complaints for current tab
-  const getFilteredComplaints = () => {
-    let filtered = complaints.filter(comp => comp.category === activeTab && comp.assigned === userName);
-
-    // Apply date range filter
-    if (filterFromDate || filterToDate) {
-      filtered = filtered.filter(comp => {
-        if (!comp.createdAt) return false;
-        const compDate = comp.createdAt instanceof Date ? comp.createdAt : new Date(comp.createdAt);
-        const compTime = compDate.getTime();
-
-        if (filterFromDate && filterToDate) {
-          const fromDate = new Date(filterFromDate);
-          const toDate = new Date(filterToDate);
-          toDate.setHours(23, 59, 59, 999);
-          return compTime >= fromDate.getTime() && compTime <= toDate.getTime();
-        } else if (filterFromDate) {
-          const fromDate = new Date(filterFromDate);
-          return compTime >= fromDate.getTime();
-        } else if (filterToDate) {
-          const toDate = new Date(filterToDate);
-          toDate.setHours(23, 59, 59, 999);
-          return compTime <= toDate.getTime();
-        }
-        return true;
+    if (!userEmail) return;
+    const q = query(collection(db, "complaints"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const data = querySnapshot.docs.map((doc) => {
+        const c = doc.data();
+        return {
+          id: doc.id,
+          ...c,
+          createdAt: c.createdAt && c.createdAt.toDate ? c.createdAt.toDate() : c.createdAt || null,
+        };
       });
-    }
+      setComplaints(data.filter((c) => c.assigned === userEmail));
+    });
+    return () => unsubscribe();
+  }, [userEmail]);
 
-    // Apply status filter
-    if (filterStatus !== "All Status") {
-      filtered = filtered.filter(comp => getEffectiveStatus(comp) === filterStatus);
-    }
-
-    // Apply building filter
-    if (filterBuilding) {
-      filtered = filtered.filter(comp =>
-        comp.building && comp.building.toLowerCase().includes(filterBuilding.toLowerCase())
-      );
-    }
-
-    // Apply room filter
-    if (filterRoom) {
-      filtered = filtered.filter(comp =>
-        comp.location && comp.location.toLowerCase().includes(filterRoom.toLowerCase())
-      );
-    }
-
-    return filtered;
-  };
-
-  // Get complaint statistics for current category
-  const getComplaintStats = () => {
-    const categoryComplaints = complaints.filter(comp => comp.category === activeTab && comp.assigned === userName);
-    return {
-      total: categoryComplaints.length,
-      resolved: categoryComplaints.filter(comp => getEffectiveStatus(comp) === "Resolved").length,
-      pending: categoryComplaints.filter(comp => getEffectiveStatus(comp) === "Pending").length,
-      inProgress: categoryComplaints.filter(comp => getEffectiveStatus(comp) === "In Progress").length,
-      reopened: categoryComplaints.filter(comp => getEffectiveStatus(comp) === "Reopened").length,
-    };
-  };
-
-  // Clear all filters
-  const clearFilters = () => {
-    setFilterFromDate("");
-    setFilterToDate("");
-    setFilterStatus("All Status");
-    setFilterBuilding("");
-    setFilterRoom("");
-  };
-
-  // Export to Excel
-  const exportToExcel = () => {
-    const filteredData = getFilteredComplaints();
-
-    const wsData = [
-      ["Complaint ID", "Date Submitted", "Building Name", "Room Number", "Complaint Type", "Reporter Name", "Reporter Type", "Final Status", "Priority", "Description"],
-      ...filteredData.map(comp => [
-        comp.id || "",
-        comp.createdAt ? formatDateOnly(comp.createdAt) : "N/A",
-        comp.building || "",
-        comp.location || "",
-        comp.category || "",
-        comp.userName || comp.user || "",
-        getReporterType(comp.email),
-        getEffectiveStatus(comp),
-        comp.priority || "",
-        comp.description || ""
-      ])
-    ];
-
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, `${activeTab} Complaints`);
-
-    const filename = `${activeTab}_Complaints_${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
-    XLSX.writeFile(wb, filename);
-  };
-
-  // Update complaint status
-  const updateComplaintStatus = async (complaintId, newStatus) => {
-    try {
-      const complaintRef = doc(db, "complaints", complaintId);
-      await updateDoc(complaintRef, {
-        status: newStatus,
-      });
-
-      // Update local state
-      setComplaints(prev => prev.map(comp =>
-        comp.id === complaintId ? { ...comp, status: newStatus } : comp
-      ));
-    } catch (error) {
-      console.error("Error updating complaint status:", error);
-    }
-  };
-
-  // Handle password change
-  const handlePasswordChange = async (e) => {
-    e.preventDefault();
-    setPasswordChangeError("");
-    setPasswordChangeSuccess("");
-    setIsChangingPassword(true);
-
-    // Validate current password
-    if (!currentPassword) {
-      setPasswordChangeError("Please enter your current password");
-      setIsChangingPassword(false);
-      return;
-    }
-
-    // Validate new passwords
-    if (newPassword.length < 6) {
-      setPasswordChangeError("New password must be at least 6 characters long");
-      setIsChangingPassword(false);
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setPasswordChangeError("New passwords do not match");
-      setIsChangingPassword(false);
-      return;
-    }
-
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        await updatePassword(user, newPassword);
-        setPasswordChangeSuccess("Password changed successfully!");
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-
-        // Auto close modal after 2 seconds
-        setTimeout(() => {
-          setShowChangePassword(false);
-          setPasswordChangeSuccess("");
-        }, 2000);
-      }
-    } catch (error) {
-      console.error("Error changing password:", error);
-      setPasswordChangeError(error.message || "Failed to change password. Please try again.");
-    } finally {
-      setIsChangingPassword(false);
-    }
-  };
-
-  // AUTH GUARD
-  if (!userEmail.endsWith("@sup.com")) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="p-8 shadow-3xl text-center text-xl text-red-700 font-bold bg-white/80 rounded-2xl">
-          {/* Access Denied message removed */}
-        </Card>
-      </div>
+  // Filtering logic for inside card (category view)
+  function filteredComplaints(category) {
+    let comps = complaints.filter(
+      (comp) => comp.category === category && comp.assigned === userEmail
     );
+    if (filters.status !== "All Status") {
+      comps = comps.filter((comp) => getEffectiveStatus(comp) === filters.status);
+    }
+    if (filters.priority !== "All Priority") {
+      comps = comps.filter((comp) => (comp.priority || "Low") === filters.priority);
+    }
+    if (filters.date) {
+      comps = comps.filter((comp) => {
+        if (!comp.createdAt) return false;
+        const d = typeof comp.createdAt === "string" ? new Date(comp.createdAt) : comp.createdAt;
+        return (
+          d.getFullYear() === new Date(filters.date).getFullYear() &&
+          d.getMonth() === new Date(filters.date).getMonth() &&
+          d.getDate() === new Date(filters.date).getDate()
+        );
+      });
+    }
+    return comps;
   }
 
-  const filteredComplaints = getFilteredComplaints();
-  const stats = getComplaintStats();
+  // Change status handler
+  async function handleStatusChange(complaintId, newStatus) {
+    try {
+      const complaintRef = doc(db, "complaints", complaintId);
+      await updateDoc(complaintRef, { status: newStatus });
+      // UI will auto-update via onSnapshot
+    } catch (e) {
+      alert("Error updating status");
+    }
+  }
 
+  // Get stats for a category
+  function getCategoryStats(categoryName) {
+    const catComplaints = complaints.filter(
+      (comp) => comp.category === categoryName && comp.assigned === userEmail
+    );
+    return {
+      total: catComplaints.length,
+      pending: catComplaints.filter(c => getEffectiveStatus(c) === "Pending").length,
+      inProgress: catComplaints.filter(c => getEffectiveStatus(c) === "In Progress").length,
+      resolved: catComplaints.filter(c => getEffectiveStatus(c) === "Resolved").length,
+      reopened: catComplaints.filter(c => getEffectiveStatus(c) === "Reopened").length,
+    };
+  }
+
+
+
+  // Main UI
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-blue-100 to-white p-6">
-      {/* Navbar */}
-      <div className="flex justify-between items-center mb-8 w-full max-w-7xl bg-white p-4 rounded-2xl shadow-3xl">
-        <h1 className="text-3xl font-extrabold text-blue-700 drop-shadow-2xl">
+      <div className="w-full max-w-7xl flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-extrabold text-blue-700">
           Graphic Era Hill University – Supervisor Dashboard
         </h1>
-        <div className="relative">
-          <div
-            className="flex items-center gap-3 cursor-pointer px-4 py-2 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 shadow-md hover:scale-105 hover:shadow-2xl transition-all duration-200"
-            onClick={() => setProfileDropdown((prev) => !prev)}
-            style={{ border: "1px solid #e0e7ff" }}
-          >
-            <User className="w-6 h-6 text-blue-700" />
-            <span className="font-semibold text-blue-700">{userName}</span>
-            <ChevronDown className="w-5 h-5 text-blue-600" />
-          </div>
-          {profileDropdown && (
-            <div className="absolute right-0 mt-2 bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-2xl z-50 min-w-[180px] border border-blue-100"
-              style={{ transform: "translateY(5px)", boxShadow: "0 2px 16px rgba(30,64,175,0.16)" }}>
-              <button
-                className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
-                onClick={() => {
-                  setShowChangePassword(true);
-                  setProfileDropdown(false);
-                }}
-              >
-                <Key className="w-5 h-5" /> Change Password
-              </button>
-              <button
-                className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
-                onClick={() => {
-                  setProfileDropdown(false);
-                  signOut(auth).then(() => {
-                    window.location.href = "/login";
-                  });
-                }}
-              >
-                <LogOut className="w-5 h-5" /> Logout
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Export to CSV button removed as per user request */}
       </div>
-
-      {/* Category Tabs */}
-      <div className="w-full max-w-7xl mb-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="flex justify-start mb-6 bg-blue-100 rounded-2xl p-2 shadow-lg w-full overflow-x-auto">
-            {categories.map((cat) => {
-              const catComplaints = complaints.filter(comp => comp.category === cat.name && comp.assigned === userName);
-              return (
-                <TabsTrigger
-                  key={cat.name}
-                  value={cat.name}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white text-md font-bold transition shadow hover:scale-105 hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-400 whitespace-nowrap"
-                >
-                  <span className="text-lg">{cat.icon}</span>
-                  {cat.name}
-                  <span className="ml-2 bg-blue-200 text-blue-800 px-2 rounded-full text-sm font-bold shadow-inner">
-                    {catComplaints.length}
-                  </span>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-
+      {/* Category grid view with ProfileCard on left and CategoryCard grid on right */}
+      <div className="w-full max-w-7xl flex flex-col md:flex-row gap-6">
+        <div className="md:w-1/4">
+          <ProfileCard
+            name="Supervisor Name"
+            role="Supervisor"
+            email={userEmail}
+          />
+        </div>
+        <div className="md:w-3/4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {categories.map((cat) => {
-            const catComplaints = complaints.filter(comp => comp.category === cat.name && comp.assigned === userName);
-            const catStats = {
-              total: catComplaints.length,
-              resolved: catComplaints.filter(comp => getEffectiveStatus(comp) === "Resolved").length,
-              pending: catComplaints.filter(comp => getEffectiveStatus(comp) === "Pending").length,
-              inProgress: catComplaints.filter(comp => getEffectiveStatus(comp) === "In Progress").length,
-              reopened: catComplaints.filter(comp => getEffectiveStatus(comp) === "Reopened").length,
-            };
+            const stats = getCategoryStats(cat.name);
+            const catComplaints = complaints.filter(
+              (comp) => comp.category === cat.name && comp.assigned === userEmail
+            );
             return (
-              <TabsContent key={cat.name} value={cat.name} className="w-full">
-                <CategoryTabContent
-                  category={cat}
-                  complaints={catComplaints}
-                  stats={catStats}
-                  onUpdateStatus={updateComplaintStatus}
-                  onViewDetails={setModalData}
-                  onExport={exportToExcel}
-                  onToggleFilters={() => setShowFilters(!showFilters)}
-                  showFilters={showFilters}
-                  filters={{
-                    fromDate: filterFromDate,
-                    toDate: filterToDate,
-                    status: filterStatus,
-                    building: filterBuilding,
-                    room: filterRoom
-                  }}
-                  onFilterChange={{
-                    setFromDate: setFilterFromDate,
-                    setToDate: setFilterToDate,
-                    setStatus: setFilterStatus,
-                    setBuilding: setFilterBuilding,
-                    setRoom: setFilterRoom
-                  }}
-                  onClearFilters={clearFilters}
-                />
-              </TabsContent>
+              <CategoryCard
+                key={cat.name}
+                category={cat}
+                stats={stats}
+                complaints={catComplaints}
+                onClick={() => setSelectedCategory(cat.name)}
+                isSelected={selectedCategory === cat.name}
+              />
             );
           })}
-        </Tabs>
+        </div>
       </div>
-
-      {/* Complaint Details Modal */}
-      {modalData && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-          <Card className="w-full max-w-lg p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
-            <X
-              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
-              onClick={() => setModalData(null)}
-            />
-            <h2 className="text-2xl font-extrabold mb-4 text-blue-700 drop-shadow-lg">
-              Complaint Details
-            </h2>
-            <div className="space-y-3">
-              <p><strong>Complaint ID:</strong> {modalData.id}</p>
-              <p><strong>Submitted By:</strong> {modalData.email}</p>
-              <p><strong>Subject:</strong> {modalData.subject}</p>
-              <p><strong>Category:</strong> {modalData.category}</p>
-              <p><strong>Status:</strong>
-                <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${getEffectiveStatus(modalData) === "Pending"
-                  ? "bg-orange-100 text-orange-700"
-                  : getEffectiveStatus(modalData) === "In Progress"
-                    ? "bg-blue-100 text-blue-700"
-                    : getEffectiveStatus(modalData) === "Resolved"
-                      ? "bg-green-100 text-green-700"
-                      : getEffectiveStatus(modalData) === "Reopened"
-                        ? "bg-violet-100 text-violet-700"
-                        : "bg-gray-100 text-gray-700"
-                  }`}>
-                  {getEffectiveStatus(modalData)}
-                </span>
-              </p>
-              <p><strong>Building:</strong> {modalData.building}</p>
-              <p><strong>Location:</strong> {modalData.location}</p>
-              <p><strong>Description:</strong> {modalData.description}</p>
-              <p><strong>Submitted:</strong> {formatDateTimeFull(modalData.createdAt)}</p>
-              {modalData.timeSlot && (
-                <p><strong>Time Slot:</strong> {modalData.timeSlot}</p>
-              )}
-              <p><strong>Priority:</strong>
-                <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${modalData.priority === "High"
-                  ? "bg-red-100 text-red-700"
-                  : modalData.priority === "Medium"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : modalData.priority === "Low"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}>
-                  {modalData.priority}
-                </span>
-              </p>
-            </div>
-            <Button
-              onClick={() => setModalData(null)}
-              className="mt-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:from-blue-700 hover:to-blue-500 rounded-2xl font-bold shadow-lg"
-            >
-              Close
-            </Button>
-          </Card>
-        </div>
-      )}
-
-      {/* Change Password Modal */}
-      {showChangePassword && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-          <Card className="w-full max-w-md p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
-            <X
-              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
-              onClick={() => {
-                setShowChangePassword(false);
-                setPasswordChangeError("");
-                setPasswordChangeSuccess("");
-                setCurrentPassword("");
-                setNewPassword("");
-                setConfirmPassword("");
-              }}
-            />
-            <h2 className="text-2xl font-extrabold mb-6 text-blue-700 drop-shadow-lg text-center">
-              Change Password
-            </h2>
-
-            <form onSubmit={handlePasswordChange} className="space-y-4">
-              {passwordChangeError && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm">
-                  {passwordChangeError}
-                </div>
-              )}
-
-              {passwordChangeSuccess && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg text-sm">
-                  {passwordChangeSuccess}
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  id="currentPassword"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  placeholder="Enter current password"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  id="newPassword"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  placeholder="Enter new password"
-                  required
-                  minLength={6}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  placeholder="Confirm new password"
-                  required
-                  minLength={6}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isChangingPassword}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:from-blue-700 hover:to-blue-500 rounded-2xl font-bold shadow-lg py-3 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      {/* Modal for detailed complaints */}
+      <Dialog open={!!selectedCategory} onOpenChange={() => setSelectedCategory(null)}>
+        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedCategory} Complaints</DialogTitle>
+          </DialogHeader>
+          <div className="text-gray-600 text-sm mb-4">
+            {filteredComplaints(selectedCategory).length} of {complaints.filter(c => c.category === selectedCategory && c.assigned === userEmail).length} complaints
+          </div>
+          {/* Filters */}
+          <div className="flex gap-4 mb-6 flex-wrap">
+            <div>
+              <label className="block text-xs mb-1">Status</label>
+              <select
+                className="border rounded px-2 py-1"
+                value={filters.status}
+                onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
               >
-                {isChangingPassword ? "Changing Password..." : "Change Password"}
-              </Button>
-            </form>
-          </Card>
-        </div>
-      )}
+                <option>All Status</option>
+                <option>Pending</option>
+                <option>In Progress</option>
+                <option>Resolved</option>
+                <option>Reopened</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs mb-1">Priority</label>
+              <select
+                className="border rounded px-2 py-1"
+                value={filters.priority}
+                onChange={e => setFilters(f => ({ ...f, priority: e.target.value }))}
+              >
+                <option>All Priority</option>
+                <option>High</option>
+                <option>Medium</option>
+                <option>Low</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs mb-1">Date</label>
+              <input
+                type="date"
+                className="border rounded px-2 py-1"
+                value={filters.date}
+                onChange={e => setFilters(f => ({ ...f, date: e.target.value }))}
+              />
+            </div>
+            <button
+              className="text-xs underline text-blue-600 mt-5"
+              onClick={() =>
+                setFilters({ status: "All Status", priority: "All Priority", date: "" })
+              }
+            >
+              Clear Filters
+            </button>
+          </div>
+          {/* Complaints grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredComplaints(selectedCategory).map((comp) => (
+              <div
+                key={comp.id}
+                className="bg-white rounded-2xl shadow-xl p-5 flex flex-col justify-between"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">{categories.find(c => c.name === selectedCategory)?.icon}</span>
+                  <span className="font-bold">{comp.subject}</span>
+                </div>
+                <div className="text-xs text-gray-500 mb-2">ID: {comp.id}</div>
+                <div className="mb-2 text-gray-700">{comp.description}</div>
+                <div className="text-xs mb-1">
+                  <span className="font-medium">Submitted By:</span> {comp.submittedBy}
+                </div>
+                <div className="text-xs mb-1">
+                  <span className="font-medium">Date:</span> {formatDate(comp.createdAt)}
+                </div>
+                <div className="flex gap-2 mt-2 mb-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusClass(getEffectiveStatus(comp))}`}>
+                    {getEffectiveStatus(comp)}
+                  </span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${priorityClass(comp.priority)}`}>
+                    {comp.priority}
+                  </span>
+                </div>
+                <div>
+                  <select
+                    value={getEffectiveStatus(comp)}
+                    onChange={e => handleStatusChange(comp.id, e.target.value)}
+                    className="border rounded px-3 py-2 w-full mt-2"
+                  >
+                    <option value="Pending">Mark as Pending</option>
+                    <option value="In Progress">Mark as In Progress</option>
+                    <option value="Resolved">Mark as Resolved</option>
+                    <option value="Reopened">Mark as Reopened</option>
+                  </select>
+                </div>
+              </div>
+            ))}
+            {filteredComplaints(selectedCategory).length === 0 && (
+              <div className="col-span-full text-center text-gray-500 py-12">
+                No complaints found for this category with selected filters.
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
