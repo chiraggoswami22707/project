@@ -1,0 +1,37 @@
+[
+  {
+    "building": "ACADEMIC BLOCK A BASEMENT",
+    "roomNo": "A0001",
+    "labName": "Central Library"
+  },
+  {
+    "building": "ACADEMIC BLOCK A GROUND FLOOR",
+    "roomNo": "A001",
+    "labName": "Director Office"
+  },
+  {
+    "building": "ACADEMIC BLOCK A FIRST FLOOR",
+    "roomNo": "A101",
+    "labName": "Classroom 101"
+  },
+  {
+    "building": "ACADEMIC BLOCK A SECOND FLOOR",
+    "roomNo": "A201",
+    "labName": "Computer Lab 1"
+  },
+  {
+    "building": "ACADEMIC BLOCK B GROUND FLOOR",
+    "roomNo": "B001",
+    "labName": "Admission Office"
+  },
+  {
+    "building": "ACADEMIC BLOCK B FIRST FLOOR",
+    "roomNo": "B101",
+    "labName": "VLSI Lab"
+  },
+  {
+    "building": "ACADEMIC BLOCK B SECOND FLOOR",
+    "roomNo": "B201",
+    "labName": "Physics Lab"
+  }
+]

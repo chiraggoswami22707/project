@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -41,6 +42,7 @@ import "tippy.js/dist/tippy.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ProfileCard from "@/components/ProfileCard";
+import useRoomData from "@/lib/useRoomData";
 
 // Utility: Format date+time as "24 Aug 2025, 11:30 AM"
 function formatDateTimeFull(dateInput) {
@@ -117,6 +119,27 @@ export default function StudentDashboard() {
   const [slotTime, setSlotTime] = useState("");
   const [allBookedSlots, setAllBookedSlots] = useState([]);
   const [timeSlotError, setTimeSlotError] = useState("");
+  const [userType, setUserType] = useState("student"); // Default to student
+
+  // New states for dropdowns
+  const [selectedBlock, setSelectedBlock] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState("");
+  const [rooms, setRooms] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [selectedRoomObject, setSelectedRoomObject] = useState(null);
+  const [selectedBuilding, setSelectedBuilding] = useState("");
+  const [blocks, setBlocks] = useState([]);
+
+  // Use the custom hook to load room data
+  const { data: roomData, loading: roomDataLoading, error: roomDataError } = useRoomData();
+
+  // Fix fetch path for roomStore.json to public folder
+  useEffect(() => {
+    if (roomDataError) {
+      console.error("Error loading room data:", roomDataError);
+    }
+  }, [roomDataError]);
 
   // AUTH: set user email, userName, and role (student/staff)
   useEffect(() => {
@@ -126,10 +149,13 @@ export default function StudentDashboard() {
         setUserName(user.displayName || user.email?.split("@")[0]);
         if (user.email.endsWith("@gmail.com")) {
           setUserRole("student");
+          setUserType("student");
         } else if (user.email.endsWith("@staff.com")) {
           setUserRole("staff");
+          setUserType("staff");
         } else {
-          setUserRole(""); // not allowed here
+          setUserRole("");
+          setUserType("");
         }
       } else setUserEmail("");
     });
@@ -212,6 +238,31 @@ export default function StudentDashboard() {
     fetchAllSlots();
   }, [userRole, confirmationData]);
 
+  // Handle search input change
+  useEffect(() => {
+    if (searchQuery.length > 0) {
+      const filtered = roomData.allRooms.filter(room =>
+        room.building.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        room.roomNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        room.labName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setSuggestions(filtered.slice(0, 10)); // Limit to 10 suggestions
+    } else {
+      setSuggestions([]);
+    }
+  }, [searchQuery, roomData.allRooms]);
+
+  // Handle suggestion click
+  const handleSuggestionClick = (room) => {
+    setSelectedBlock(room.building);
+    setSelectedRoom(room.roomNo);
+    setSelectedRoomObject(room);
+    setSearchQuery("");
+    setSuggestions([]);
+    // Set rooms for the selected building
+    setRooms(roomData.roomsByBuilding[room.building] || []);
+  };
+
   // Complaint submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -220,14 +271,17 @@ export default function StudentDashboard() {
 
     const complaintData = {
       subject: formData.get("subject"),
-      building: formData.get("building"),
+      building: selectedRoomObject ? selectedRoomObject.building : "",
+      roomNo: selectedRoomObject ? selectedRoomObject.roomNo : "",
+      labName: selectedRoomObject ? selectedRoomObject.labName : "",
       location: formData.get("location"),
       description: formData.get("description"),
       category: activeCategory,
-      priority: autoAssignPriority(formData.get("description"), keywords),
+      priority: autoAssignPriority(formData.get("description")),
       status: "Pending",
       createdAt: new Date().toISOString(),
       email: userEmail,
+      userType: userType,
     };
 
     // Student time slot logic
@@ -270,6 +324,11 @@ export default function StudentDashboard() {
     setActiveCategory(null);
     setSlotDate(null);
     setSlotTime("");
+    setSelectedBlock("");
+    setSelectedRoom("");
+    setSelectedRoomObject(null);
+    setSearchQuery("");
+    setSuggestions([]);
   };
 
   // Delete handling
@@ -346,29 +405,11 @@ export default function StudentDashboard() {
   }
 
   return (
-<<<<<<< HEAD
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white p-6">
-      {/* Profile Card Fixed on Left Side */}
-      {userData && (
-        <div className="fixed left-6 top-6 z-40 w-80">
-          <ProfileCard user={userData} />
-=======
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-blue-100 to-white p-6">
       {/* Navbar */}
-<<<<<<< HEAD
-      <div className="flex justify-between items-center mb-10 w-full max-w-6xl bg-white p-4 rounded-2xl shadow-3xl" style={{
-        boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06)"
-      }}>
-        <h1 className="text-3xl font-extrabold text-gray-800 drop-shadow-2xl" style={{
-          letterSpacing: "1px",
-          textShadow: "2px 2px 8px rgba(30,64,175,0.08)"
-        }}>
-          Graphic Era Hill University – Student / Staff Portal
-=======
       <div className="flex justify-between items-center mb-10 w-full max-w-6xl bg-white p-4 rounded-2xl shadow-3xl">
         <h1 className="text-3xl font-extrabold text-blue-700 drop-shadow-2xl">
           Graphic Era Hill University – Student/Staff Dashboard
->>>>>>> a86102beb14cf53a7a4741cae6552bbeef5cd227
         </h1>
         <div className="relative">
           <div
@@ -450,103 +491,12 @@ export default function StudentDashboard() {
               </div>
             </form>
           </Card>
->>>>>>> aaacd1c5ca0b5bfce4a3e12b8abbcbdfce8add3e
         </div>
       )}
 
       {/* Main Content Container */}
-      <div className="ml-[22rem]">
-        {/* Navbar */}
-        <div className="flex justify-between items-center mb-10 w-full max-w-6xl bg-white p-4 rounded-2xl shadow-3xl">
-          <h1 className="text-3xl font-extrabold text-blue-700 drop-shadow-2xl">
-            Graphic Era Hill University – Student/Staff Dashboard
-          </h1>
-          <div className="relative">
-            <div
-              className="flex items-center gap-3 cursor-pointer px-4 py-2 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 shadow-md hover:scale-105 hover:shadow-2xl transition-all duration-200"
-              onClick={() => setProfileDropdown((prev) => !prev)}
-              style={{ border: "1px solid #e0e7ff" }}
-            >
-              <User className="w-6 h-6 text-blue-700" />
-              <span className="font-semibold text-blue-700">{userName}</span>
-              <ChevronDown className="w-5 h-5 text-blue-600" />
-            </div>
-            {profileDropdown && (
-              <div className="absolute right-0 mt-2 bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-2xl z-50 min-w-[180px] border border-blue-100"
-                style={{ transform: "translateY(5px)", boxShadow: "0 2px 16px rgba(30,64,175,0.16)" }}>
-                <button
-                  className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
-                  onClick={() => {
-                    setShowChangePassword(true);
-                    setProfileDropdown(false);
-                  }}
-                >
-                  <Settings className="w-5 h-5" /> Change Password
-                </button>
-                <button
-                  className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
-                  onClick={() =>
-                    signOut(auth).then(() => (window.location.href = "/login"))
-                  }
-                >
-                  <LogOut className="w-5 h-5" /> Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Change Password Modal */}
-        {showChangePassword && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
-            <Card className="w-full max-w-sm p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
-              <X
-                className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
-                onClick={() => setShowChangePassword(false)}
-              />
-              <h2 className="text-xl font-extrabold mb-4 flex items-center gap-2 text-blue-700 drop-shadow-lg">
-                <Key className="w-6 h-6" /> Change Password
-              </h2>
-              <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
-                <Input
-                  type="password"
-                  name="currentPassword"
-                  placeholder="Enter current password"
-                  required
-                  className="rounded-lg shadow-inner"
-                />
-                <Input
-                  type="password"
-                  name="newPassword"
-                  placeholder="Enter new password"
-                  required
-                  minLength={6}
-                  className="rounded-lg shadow-inner"
-                />
-                {passwordChangeError && (
-                  <div className="text-sm text-red-600">{passwordChangeError}</div>
-                )}
-                {passwordChangeSuccess && (
-                  <div className="text-sm text-green-600">{passwordChangeSuccess}</div>
-                )}
-                <div className="flex gap-4 justify-end mt-2">
-                  <Button variant="outline" onClick={() => setShowChangePassword(false)}
-                    className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-blue-100 transition-all duration-150">
-                    Cancel
-                  </Button>
-                  <Button type="submit"
-                    className="rounded-xl font-bold shadow bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:scale-105 hover:from-blue-700 hover:to-blue-500 transition-all duration-150">
-                    Update Password
-                  </Button>
-                </div>
-              </form>
-            </Card>
-          </div>
-        )}
-
-        {/* TABS */}
-        <div className="flex flex-col items-center justify-center w-full" style={{ minHeight: "calc(100vh - 200px)" }}>
-          <Card className="p-8 shadow-3xl rounded-3xl w-full max-w-5xl mx-auto flex justify-center bg-gradient-to-b from-white via-blue-50 to-white">
+      <div className="w-full flex flex-col items-center">
+        <Card className="p-8 shadow-3xl rounded-3xl w-full max-w-5xl mx-auto flex justify-center bg-gradient-to-b from-white via-blue-50 to-white">
           <Tabs defaultValue="submit" className="w-full flex flex-col items-center">
             <TabsList className="flex justify-center mb-8 bg-blue-100 rounded-2xl p-2 shadow-lg">
               <TabsTrigger
@@ -600,7 +550,70 @@ export default function StudentDashboard() {
                   ))}
                 </div>
                 <Input name="subject" placeholder="Subject" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
-                <Input name="building" placeholder="Property/Building" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
+                {/* Search Input */}
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Search building, room, or lab"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150"
+                  />
+                  {suggestions.length > 0 && (
+                    <ul className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-xl shadow-lg z-10 max-h-40 overflow-y-auto">
+                      {suggestions.map((room) => (
+                        <li
+                          key={`${room.building}-${room.roomNo}`}
+                          onClick={() => handleSuggestionClick(room)}
+                          className="p-2 hover:bg-blue-50 cursor-pointer"
+                        >
+                          {room.building} - {room.roomNo} - {room.labName}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {/* Building Dropdown */}
+                <select
+                  name="building"
+                  value={selectedBlock}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedBlock(val);
+                    setRooms(roomData.roomsByBuilding[val] || []);
+                    setSelectedRoom("");
+                    setSelectedRoomObject(null);
+                  }}
+                  className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150 p-3"
+                  disabled={roomDataLoading || roomDataError}
+                >
+                  <option value="">Select Building</option>
+                  {roomData.buildings.map((building) => (
+                    <option key={building} value={building}>
+                      {building}
+                    </option>
+                  ))}
+                </select>
+                {/* Room Dropdown */}
+                <select
+                  name="room"
+                  value={selectedRoom}
+                  onChange={(e) => {
+                    const roomNo = e.target.value;
+                    setSelectedRoom(roomNo);
+                    const room = rooms.find(r => r.roomNo === roomNo);
+                    setSelectedRoomObject(room);
+                  }}
+                  className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150 p-3"
+                  disabled={!rooms.length}
+                >
+                  <option value="">Select Room</option>
+                  {rooms.map((room) => (
+                    <option key={room.roomNo} value={room.roomNo}>
+                      {room.fullName}
+                    </option>
+                  ))}
+                </select>
                 <Input name="location" placeholder="Specific Location" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
                 <Textarea
                   name="description"
@@ -687,22 +700,29 @@ export default function StudentDashboard() {
                             <Clock className="w-4 h-4" /> Slot: {comp.timeSlot}
                           </div>
                         )}
-                        <span className="text-sm font-medium">
-                          {userRole === "staff" ? "Staff" : "Student"}
-                        </span>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <span
-                          className={`px-4 py-1 rounded-full text-sm font-bold shadow-inner ${comp.priority === "High"
-                            ? "bg-red-100 text-red-700"
-                            : comp.priority === "Medium"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-green-100 text-green-700"
-                            }`}
-                          title={`Priority: ${comp.priority}`}
-                        >
-                          {comp.priority} Priority
-                        </span>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="rounded-xl hover:bg-red-600 text-white hover:scale-105 transition-all duration-150 font-semibold shadow flex items-center gap-1"
+                            onClick={() => handleDelete(comp)}
+                          >
+                            <Trash2 className="w-4 h-4" /> Delete
+                          </Button>
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-bold shadow-inner ${comp.priority === "High"
+                              ? "bg-red-100 text-red-700"
+                              : comp.priority === "Medium"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-green-100 text-green-700"
+                              }`}
+                            title={`Priority: ${comp.priority}`}
+                          >
+                            {comp.priority}
+                          </span>
+                        </div>
                         {comp.status === "Resolved" && (
                           <Button
                             variant="outline"
@@ -713,14 +733,6 @@ export default function StudentDashboard() {
                             <Repeat className="w-4 h-4" /> Reopen Complaint
                           </Button>
                         )}
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="rounded-xl hover:bg-red-600 text-white hover:scale-105 transition-all duration-150 font-semibold shadow flex items-center gap-1"
-                          onClick={() => handleDelete(comp)}
-                        >
-                          <Trash2 className="w-4 h-4" /> Delete
-                        </Button>
                       </div>
                     </div>
                     <Button
@@ -785,6 +797,19 @@ export default function StudentDashboard() {
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-2">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="rounded-xl hover:bg-red-600 text-white hover:scale-105 transition-all duration-150 font-semibold shadow flex items-center gap-1"
+                            onClick={() => handleDelete(comp)}
+                          >
+                            <Trash2 className="w-4 h-4" /> Delete
+                          </Button>
+                          <span className={`px-3 py-1 rounded-full text-sm font-bold shadow-inner bg-violet-100 text-violet-700`}>
+                            {comp.status}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <Button
@@ -801,10 +826,9 @@ export default function StudentDashboard() {
           </Tabs>
         </Card>
       </div>
-      </div>
       {/* Complaint Details Modal */}
       {modalData && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/10 backdrop-blur-sm z-50 p-4">
           <Card className="w-full max-w-lg p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-blue-50 to-white animate-scaleIn">
             <X
               className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
@@ -858,6 +882,44 @@ export default function StudentDashboard() {
             >
               Close
             </Button>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+          <Card className="w-full max-w-md p-6 relative shadow-3xl rounded-2xl bg-gradient-to-b from-white via-red-50 to-white animate-scaleIn">
+            <X
+              className="absolute top-4 right-4 w-6 h-6 cursor-pointer text-gray-600 hover:text-red-600 transition"
+              onClick={cancelDelete}
+            />
+            <h2 className="text-2xl font-extrabold mb-4 text-red-700 drop-shadow-lg flex items-center gap-2">
+              <Trash2 className="w-6 h-6" /> Delete Complaint
+            </h2>
+            <p className="mb-4 text-gray-700">
+              Are you sure you want to delete this complaint? This action cannot be undone.
+            </p>
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <p className="font-semibold text-gray-800">{deleteConfirm.subject}</p>
+              <p className="text-sm text-gray-600 mt-1">{deleteConfirm.description}</p>
+            </div>
+            <div className="flex gap-4 justify-end">
+              <Button
+                variant="outline"
+                onClick={cancelDelete}
+                className="rounded-xl font-semibold shadow hover:scale-105 hover:bg-gray-100 transition-all duration-150"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                className="rounded-xl font-bold shadow bg-gradient-to-r from-red-600 to-red-400 text-white hover:scale-105 hover:from-red-700 hover:to-red-500 transition-all duration-150"
+              >
+                Delete Complaint
+              </Button>
+            </div>
           </Card>
         </div>
       )}

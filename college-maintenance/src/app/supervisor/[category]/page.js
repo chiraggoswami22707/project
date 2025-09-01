@@ -33,6 +33,7 @@ const categories = [
 // --- FILTER OPTIONS ---
 const statusOptions = ["All Status", "Pending", "In Progress", "Resolved", "Reopened"];
 const priorityOptions = ["All Priority", "High", "Medium", "Low"];
+const userTypeOptions = ["All", "Student", "Staff"];
 
 // --- FORMATTERS ---
 function formatDate(dateInput) {
@@ -80,6 +81,7 @@ export default function SupervisorCategoryPage() {
   const [filters, setFilters] = useState({
     status: "All Status",
     priority: "All Priority",
+    userType: "All",
     fromDate: "",
     toDate: "",
     search: "",
@@ -127,6 +129,12 @@ export default function SupervisorCategoryPage() {
     }
     if (filters.priority !== "All Priority") {
       comps = comps.filter((comp) => (comp.priority || "Low") === filters.priority);
+    }
+    if (filters.userType !== "All") {
+      comps = comps.filter((comp) => {
+        const userType = comp.email && comp.email.includes('@staff.com') ? 'Staff' : 'Student';
+        return userType === filters.userType;
+      });
     }
     if (filters.fromDate) {
       comps = comps.filter((comp) => {
@@ -218,6 +226,16 @@ export default function SupervisorCategoryPage() {
           </select>
         </div>
         <div>
+          <label className="block text-xs mb-1">User Type</label>
+          <select
+            className="border rounded px-2 py-1"
+            value={filters.userType}
+            onChange={e => setFilters(f => ({ ...f, userType: e.target.value }))}
+          >
+            {userTypeOptions.map(opt => <option key={opt}>{opt}</option>)}
+          </select>
+        </div>
+        <div>
           <label className="block text-xs mb-1">From Date</label>
           <input
             type="date"
@@ -248,7 +266,7 @@ export default function SupervisorCategoryPage() {
         <button
           className="text-xs underline text-blue-600 mt-5"
           onClick={() =>
-            setFilters({ status: "All Status", priority: "All Priority", date: "", search: "" })
+            setFilters({ status: "All Status", priority: "All Priority", userType: "All", fromDate: "", toDate: "", search: "" })
           }
         >
           Clear Filters
@@ -309,14 +327,24 @@ export default function SupervisorCategoryPage() {
       </div>
 
       {/* Complaint View Dialog */}
-      <Dialog open={!!selectedComplaint} onOpenChange={() => setSelectedComplaint(null)}>
-        <DialogContent className="bg-white rounded-lg shadow-lg p-6 relative max-w-4xl w-full">
-          <DialogHeader className="flex justify-between items-center">
-            <DialogTitle className="text-blue-600 font-bold text-lg">Complaint Details</DialogTitle>
-          </DialogHeader>
-          <div>
-            {selectedComplaint && (
-              <div className="space-y-3 text-sm mt-4">
+      {selectedComplaint && (
+        <>
+          {/* Glassmorphism Overlay */}
+          <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 transition-all" aria-hidden="true" />
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-6 relative max-w-2xl w-full border border-white/40 transition-all duration-300 ease-in-out">
+              {/* Modal Header */}
+              <div className="flex justify-between items-center border-b border-gray-200/50 pb-3">
+                <span className="text-xl font-semibold text-gray-800">Complaint Details</span>
+                <button
+                  onClick={() => setSelectedComplaint(null)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition"
+                >
+                  ✕
+                </button>
+              </div>
+              {/* Modal Body */}
+              <div className="space-y-4 text-sm text-gray-700 mt-3">
                 <div className="flex justify-between">
                   <span className="font-semibold">Subject:</span>
                   <span>{selectedComplaint.subject}</span>
@@ -327,13 +355,21 @@ export default function SupervisorCategoryPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold">Priority:</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${priorityClass(selectedComplaint.priority)}`}>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${priorityClass(
+                      selectedComplaint.priority
+                    )}`}
+                  >
                     {selectedComplaint.priority}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold">Status:</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusClass(getEffectiveStatus(selectedComplaint))}`}>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusClass(
+                      getEffectiveStatus(selectedComplaint)
+                    )}`}
+                  >
                     {getEffectiveStatus(selectedComplaint)}
                   </span>
                 </div>
@@ -352,25 +388,25 @@ export default function SupervisorCategoryPage() {
                 <div className="flex justify-between">
                   <span className="font-semibold">Submitted By:</span>
                   <span>{selectedComplaint.email || "N/A"}</span>
-                  <span>{selectedComplaint.userType ? `(${selectedComplaint.userType})` : ""}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-semibold">Submitted:</span>
+                  <span className="font-semibold">Time Slot Booked:</span>
                   <span>{selectedComplaint.timeSlot || "N/A"}</span>
                 </div>
-                <div className="flex justify-end mt-4">
-                  <button
-                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-                    onClick={() => setSelectedComplaint(null)}
-                  >
-                    Close
-                  </button>
-                </div>
               </div>
-            )}
+              {/* Modal Footer */}
+              <div className="flex justify-end mt-6">
+                <button
+                  className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors duration-200"
+                  onClick={() => setSelectedComplaint(null)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </>
+      )}
     </div>
   );
 }

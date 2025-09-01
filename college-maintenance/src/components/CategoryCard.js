@@ -31,7 +31,8 @@ const CategoryCard = ({ category, stats, complaints, onClick, isSelected }) => {
         )}
       </div>
       {/* Show recent complaints preview */}
-      {complaints.slice(0, 2).map((comp) => (
+      {/* Removed complaints preview and "+N more" to show complaints only inside tab on click */}
+      {/* {complaints.slice(0, 2).map((comp) => (
         <div key={comp.id} className="mt-2 p-3 rounded-lg bg-blue-50 text-sm">
           <div className="font-semibold">{comp.subject}</div>
           <div className="text-xs text-gray-600">{new Date(comp.createdAt).toLocaleDateString()}</div>
@@ -47,7 +48,7 @@ const CategoryCard = ({ category, stats, complaints, onClick, isSelected }) => {
       ))}
       {complaints.length > 2 && (
         <div className="mt-1 text-xs text-blue-600">+{complaints.length - 2} more...</div>
-      )}
+      )} */}
     </div>
   );
 };
