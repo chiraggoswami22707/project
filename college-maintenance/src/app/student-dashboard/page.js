@@ -242,9 +242,9 @@ export default function StudentDashboard() {
   useEffect(() => {
     if (searchQuery.length > 0) {
       const filtered = roomData.allRooms.filter(room =>
-        room.building.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        room.roomNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        room.labName.toLowerCase().includes(searchQuery.toLowerCase())
+        room.building?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        room.roomNo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        room.labName?.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setSuggestions(filtered.slice(0, 10)); // Limit to 10 suggestions
     } else {
@@ -588,8 +588,8 @@ export default function StudentDashboard() {
                   disabled={roomDataLoading || roomDataError}
                 >
                   <option value="">Select Building</option>
-                  {roomData.buildings.map((building) => (
-                    <option key={building} value={building}>
+                  {roomData.buildings.map((building, index) => (
+                    <option key={`${building}-${index}`} value={building}>
                       {building}
                     </option>
                   ))}
@@ -608,8 +608,8 @@ export default function StudentDashboard() {
                   disabled={!rooms.length}
                 >
                   <option value="">Select Room</option>
-                  {rooms.map((room) => (
-                    <option key={room.roomNo} value={room.roomNo}>
+                  {rooms.map((room, index) => (
+                    <option key={`${room.roomNo}-${index}`} value={room.roomNo}>
                       {room.fullName}
                     </option>
                   ))}

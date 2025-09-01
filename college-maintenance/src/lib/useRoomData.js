@@ -27,7 +27,12 @@ export default function useRoomData() {
         let allRooms = [];
 
         jsonData.forEach((item) => {
-          const { building, roomNo, labName } = item;
+          // Normalize keys for compatibility with roomStore.json
+          const building = item["Building Name"]?.trim() || item.building?.trim() || "";
+          const roomNo = item["Room No."]?.trim() || item.roomNo?.trim() || "";
+          const labName = item["Lab/Room Name"]?.trim() || item.labName?.trim() || "";
+
+          if (!building) return;
 
           // Add to buildings if not already present
           if (!buildings.includes(building)) {
@@ -58,7 +63,6 @@ export default function useRoomData() {
         setLoading(false);
       }
     };
-
 
     fetchJsonData();
   }, []);

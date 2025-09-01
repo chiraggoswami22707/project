@@ -1,37 +1,537 @@
 [
   {
-    "building": "ACADEMIC BLOCK A BASEMENT",
-    "roomNo": "A0001",
-    "labName": "Central Library"
+    "Building Name": "ACADEMIC BLOCK A BASEMENT",
+    "Room No.": "A0001",
+    "Lab/Room Name": "Central Library"
   },
   {
-    "building": "ACADEMIC BLOCK A GROUND FLOOR",
-    "roomNo": "A001",
-    "labName": "Director Office"
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A001",
+    "Lab/Room Name": "Director Office"
   },
   {
-    "building": "ACADEMIC BLOCK A FIRST FLOOR",
-    "roomNo": "A101",
-    "labName": "Classroom 101"
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A002",
+    "Lab/Room Name": "HR Section"
   },
   {
-    "building": "ACADEMIC BLOCK A SECOND FLOOR",
-    "roomNo": "A201",
-    "labName": "Computer Lab 1"
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A003",
+    "Lab/Room Name": "Account Section"
   },
   {
-    "building": "ACADEMIC BLOCK B GROUND FLOOR",
-    "roomNo": "B001",
-    "labName": "Admission Office"
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A004",
+    "Lab/Room Name": "Student Outreach"
   },
   {
-    "building": "ACADEMIC BLOCK B FIRST FLOOR",
-    "roomNo": "B101",
-    "labName": "VLSI Lab"
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A005",
+    "Lab/Room Name": "Conference Room"
   },
   {
-    "building": "ACADEMIC BLOCK B SECOND FLOOR",
-    "roomNo": "B201",
-    "labName": "Physics Lab"
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A006",
+    "Lab/Room Name": "Computer Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A007",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A008",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A009",
+    "Lab/Room Name": "Computer Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A101",
+    "Lab/Room Name": "Physics Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A102",
+    "Lab/Room Name": "Server Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A103",
+    "Lab/Room Name": "Electronics Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A104",
+    "Lab/Room Name": "Staff Room "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A105",
+    "Lab/Room Name": "Computer Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A106",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A107",
+    "Lab/Room Name": "Evaluation Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         SECOND FLOOR",
+    "Room No.": "A201",
+    "Lab/Room Name": "Exam Cell"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         SECOND FLOOR",
+    "Room No.": "A202",
+    "Lab/Room Name": "SOE Office"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B GROUND FLOOR",
+    "Room No.": "B001",
+    "Lab/Room Name": "Fluid Machinary Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B GROUND FLOOR",
+    "Room No.": "B002",
+    "Lab/Room Name": "Fluid Mechanics Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B GROUND FLOOR",
+    "Room No.": "B003",
+    "Lab/Room Name": "Applied Thermodynamics /Heat and Mass Transfer Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B  FIRST FLOOR",
+    "Room No.": "B101",
+    "Lab/Room Name": "VLSI Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B  FIRST FLOOR",
+    "Room No.": "B102",
+    "Lab/Room Name": "Computer Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B  FIRST FLOOR",
+    "Room No.": "B103",
+    "Lab/Room Name": "High Performance Computing Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B       SECOND FLOOR",
+    "Room No.": "B201",
+    "Lab/Room Name": "Sai Sandhya Hall"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B       SECOND FLOOR",
+    "Room No.": "B202",
+    "Lab/Room Name": "CCTV Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C GROUND FLOOR",
+    "Room No.": "C001",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C GROUND FLOOR",
+    "Room No.": "C002",
+    "Lab/Room Name": "Civil Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C GROUND FLOOR",
+    "Room No.": "C003",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C GROUND FLOOR",
+    "Room No.": "C004",
+    "Lab/Room Name": "Seminar Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    FIRST FLOOR",
+    "Room No.": "C101",
+    "Lab/Room Name": "Computer Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    FIRST FLOOR",
+    "Room No.": "C102",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    FIRST FLOOR",
+    "Room No.": "C103",
+    "Lab/Room Name": "Electronics Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    FIRST FLOOR",
+    "Room No.": "C104",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    SECOND FLOOR",
+    "Room No.": "C201",
+    "Lab/Room Name": "Computer Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    SECOND FLOOR",
+    "Room No.": "C202",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    SECOND FLOOR",
+    "Room No.": "C203",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    SECOND FLOOR",
+    "Room No.": "C204",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C301",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C302",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C303",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C304",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C305",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C306",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0001",
+    "Lab/Room Name": "Girls Common Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0002",
+    "Lab/Room Name": "Human Anatomy and Physiology Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0003",
+    "Lab/Room Name": "Pharmacology lab I"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0004",
+    "Lab/Room Name": "Pharmaceutical Analysis lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0005",
+    "Lab/Room Name": "Pharmaceutical Chemistry Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0006",
+    "Lab/Room Name": "Pharmaceutics Lab II"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0007",
+    "Lab/Room Name": "Pharmaceutics Lab I"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0008",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0009",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0010",
+    "Lab/Room Name": "Pharmacy Store Room "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-B11",
+    "Lab/Room Name": "Electricity Panel Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0012",
+    "Lab/Room Name": "Pharmacognosy Lab 1"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D001",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D002",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D003",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D004",
+    "Lab/Room Name": "Seminar Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D005",
+    "Lab/Room Name": "Seminar Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D006",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D007",
+    "Lab/Room Name": "Central Instrumentation Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D008",
+    "Lab/Room Name": "Pharmacy Machine Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D101",
+    "Lab/Room Name": "Pharmaceutics Lab 3"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D102",
+    "Lab/Room Name": "Pharmacognosy Lab 2"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D103",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D104",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D105",
+    "Lab/Room Name": "Chemistry Lab 2"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D106",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D201",
+    "Lab/Room Name": "Community Pharmacy Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D202",
+    "Lab/Room Name": "Pharmacology lab 2"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D203",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D204",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D205",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D206",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D207",
+    "Lab/Room Name": "Staff Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D208",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D209",
+    "Lab/Room Name": "Staff Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D    THIRD FLOOR",
+    "Room No.": "D301",
+    "Lab/Room Name": "Auditorium"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0001",
+    "Lab/Room Name": "Common Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0002",
+    "Lab/Room Name": "Community Health Nursing Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0003",
+    "Lab/Room Name": "Faculty Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0004",
+    "Lab/Room Name": "Nutrition Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0005",
+    "Lab/Room Name": "MEETING ROOM"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0006",
+    "Lab/Room Name": "Principal Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0007",
+    "Lab/Room Name": "VICE PRINCIPAL ROOM"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0008",
+    "Lab/Room Name": "Faculty Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0009",
+    "Lab/Room Name": "Pre clinical science Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E GROUND FLOOR",
+    "Room No.": "E001",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E GROUND FLOOR",
+    "Room No.": "E002",
+    "Lab/Room Name": "Advance skill Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E GROUND FLOOR",
+    "Room No.": "E003",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E GROUND FLOOR",
+    "Room No.": "E004",
+    "Lab/Room Name": "Obstetrics & Gynaecology Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    FIRST FLOOR",
+    "Room No.": "E101",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    FIRST FLOOR",
+    "Room No.": "E102",
+    "Lab/Room Name": "Child Health Nursing Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    FIRST FLOOR",
+    "Room No.": "E103",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    FIRST FLOOR",
+    "Room No.": "E104",
+    "Lab/Room Name": "Computer Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    SECOND FLOOR",
+    "Room No.": "E201",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    SECOND FLOOR",
+    "Room No.": "E202",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    SECOND FLOOR",
+    "Room No.": "E203",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    SECOND FLOOR",
+    "Room No.": "E204",
+    "Lab/Room Name": "Computer Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    THIRD FLOOR",
+    "Room No.": "E301",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    THIRD FLOOR",
+    "Room No.": "E302",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    THIRD FLOOR",
+    "Room No.": "E303",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    THIRD FLOOR",
+    "Room No.": "E304",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    THIRD FLOOR",
+    "Room No.": "E305",
+    "Lab/Room Name": "Classroom"
   }
 ]
