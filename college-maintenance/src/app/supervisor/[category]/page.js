@@ -31,7 +31,7 @@ const categories = [
 ];
 
 // --- FILTER OPTIONS ---
-const statusOptions = ["All Status", "Pending", "In Progress", "Resolved", "Reopened"];
+const statusOptions = ["All Status", "Pending", "In Progress", "Resolved", "Reopened", "Assigned"];
 const priorityOptions = ["All Priority", "High", "Medium", "Low"];
 const userTypeOptions = ["All", "Student", "Staff"];
 
@@ -77,6 +77,7 @@ export default function SupervisorCategoryPage() {
   const router = useRouter();
   const categoryParam = params.category;
   const [complaints, setComplaints] = useState([]);
+  const [assignedComplaints, setAssignedComplaints] = useState([]);
   const [userEmail, setUserEmail] = useState("");
   const [filters, setFilters] = useState({
     status: "All Status",
@@ -103,9 +104,8 @@ export default function SupervisorCategoryPage() {
     // eslint-disable-next-line
   }, []);
 
-  // --- REALTIME FETCH ALL COMPLAINTS ---
+  // --- REALTIME FETCH ALL COMPLAINTS FOR THIS CATEGORY ---
   useEffect(() => {
-    // Fetches ALL complaints in realtime for this category
     const q = query(collection(db, "complaints"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const data = querySnapshot.docs.map((doc) => {
@@ -121,9 +121,33 @@ export default function SupervisorCategoryPage() {
     return () => unsubscribe();
   }, []);
 
+  // --- REALTIME FETCH ASSIGNED COMPLAINTS FOR THIS SUPERVISOR IN THIS CATEGORY ---
+  useEffect(() => {
+    if (!userEmail) return;
+    const q = query(collection(db, "complaints"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const data = querySnapshot.docs
+        .map((doc) => {
+          const c = doc.data();
+          return {
+            id: doc.id,
+            ...c,
+            createdAt: c.createdAt && c.createdAt.toDate ? c.createdAt.toDate() : c.createdAt || null,
+          };
+        })
+        .filter((comp) => comp.assignedSupervisor === userEmail);
+      setAssignedComplaints(data);
+    });
+    return () => unsubscribe();
+  }, [userEmail]);
+
   // --- FILTERED complaints for this category ---
   function filteredComplaints() {
-    let comps = complaints.filter((comp) => (comp.category || "Other") === decodeURIComponent(categoryParam));
+    const decodedCategory = decodeURIComponent(categoryParam).toLowerCase();
+    let comps = complaints.filter((comp) => {
+      const cat = comp.category === null || comp.category === undefined ? "Other" : comp.category;
+      return cat.toLowerCase() === decodedCategory;
+    });
     if (filters.status !== "All Status") {
       comps = comps.filter((comp) => getEffectiveStatus(comp) === filters.status);
     }
@@ -162,6 +186,21 @@ export default function SupervisorCategoryPage() {
           (comp.email && comp.email.toLowerCase().includes(s))
       );
     }
+    return comps;
+  }
+
+  // --- FILTERED assigned complaints for this category and supervisor ---
+  function filteredAssignedComplaints() {
+    const decodedCategory = decodeURIComponent(categoryParam).toLowerCase();
+    let comps = assignedComplaints.filter((comp) => {
+      const cat = comp.category === null || comp.category === undefined ? "Other" : comp.category;
+      return cat.toLowerCase() === decodedCategory;
+    });
+    // Filter only updated complaints by status (Pending, In Progress, Resolved, Assigned)
+    comps = comps.filter((comp) => {
+      const status = getEffectiveStatus(comp);
+      return ["Pending", "In Progress", "Resolved", "Assigned"].includes(status);
+    });
     return comps;
   }
 

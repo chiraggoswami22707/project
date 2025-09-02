@@ -17,9 +17,17 @@ export default function useRoomData() {
         setLoading(true);
         setError(null);
 
-        // Fetch the JSON file from the public folder
-        const response = await fetch("/roomStore.json");
-        const jsonData = await response.json();
+        // Fetch both JSON files from the public folder
+        const [academicResponse, hostelResponse] = await Promise.all([
+          fetch("/roomStore.json"),
+          fetch("/All_Hostels_Rooms.json")
+        ]);
+
+        const academicData = await academicResponse.json();
+        const hostelData = await hostelResponse.json();
+
+        // Combine the data arrays
+        const jsonData = [...academicData, ...hostelData];
 
         // Parse the data to extract buildings and rooms
         let buildings = [];
@@ -27,10 +35,26 @@ export default function useRoomData() {
         let allRooms = [];
 
         jsonData.forEach((item) => {
-          // Normalize keys for compatibility with roomStore.json
-          const building = item["Building Name"]?.trim() || item.building?.trim() || "";
-          const roomNo = item["Room No."]?.trim() || item.roomNo?.trim() || "";
-          const labName = item["Lab/Room Name"]?.trim() || item.labName?.trim() || "";
+          let building = "";
+          let roomNo = "";
+          let labName = "";
+          let fullName = "";
+
+          // Check if it's a hostel entry
+          if (item.Hostel) {
+            // Hostel structure
+            building = item.Hostel.trim();
+            const floorBlock = item["Floor/Block"] || item["Floor\/Block"] || "";
+            roomNo = item["Room No"] || item.roomNo || "";
+            labName = item["Room Type"] || "Hostel Room";
+            fullName = `${floorBlock} - ${roomNo} (${labName})`;
+          } else {
+            // Academic building structure
+            building = item["Building Name"]?.trim() || item.building?.trim() || "";
+            roomNo = item["Room No."]?.trim() || item.roomNo?.trim() || "";
+            labName = item["Lab/Room Name"]?.trim() || item.labName?.trim() || "";
+            fullName = `${roomNo} - ${labName}`;
+          }
 
           if (!building) return;
 
@@ -44,7 +68,7 @@ export default function useRoomData() {
           roomsByBuilding[building].push({
             roomNo,
             labName,
-            fullName: `${roomNo} - ${labName}`,
+            fullName,
           });
 
           // Add to allRooms for search
@@ -52,7 +76,7 @@ export default function useRoomData() {
             building,
             roomNo,
             labName,
-            fullName: `${roomNo} - ${labName}`,
+            fullName,
           });
         });
 

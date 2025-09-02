@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import { useState, useEffect } from "react";
 import { db, auth } from "@/firebase/config";
@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import autoAssignPriority from "@/utils/autoAssignPriority";
+import useRoomData from "@/lib/useRoomData";
 import "tippy.js/dist/tippy.css";
 
 // Utility: Format date+time as "24 Aug 2025, 11:30 AM"
@@ -67,16 +68,15 @@ function formatDateTimeFull(dateInput) {
   }).replace(",", "");
 }
 
-// Staff-specific categories (projector, system issues, etc.)
-const staffCategories = [
-  { name: "Projector", icon: "📽️", desc: "Projector issues, display problems, connectivity" },
-  { name: "Computer System", icon: "💻", desc: "Computer hardware, software, or network issues" },
-  { name: "Printer", icon: "🖨️", desc: "Printer malfunctions, paper jams, connectivity" },
-  { name: "Electrical", icon: "⚡", desc: "Power outlets, switches, electrical failures" },
-  { name: "Furniture", icon: "🪑", desc: "Desk, chair, or furniture repairs" },
-  { name: "Cleaning", icon: "🧹", desc: "Office or room cleaning requests" },
-  { name: "Internet", icon: "🌐", desc: "Wi-Fi connectivity, network issues" },
-  { name: "Other", icon: "❓", desc: "Any other staff-related issue" },
+const categories = [
+  { name: "Electrical", icon: "⚡", desc: "Issues related to lights, fuses, wiring, switches, sockets, and electrical failures." },
+  { name: "Plumbing", icon: "🚰", desc: "Problems like leaks, broken taps, clogged pipes, water supply issues, or drainage." },
+  { name: "Cleaning", icon: "🧹", desc: "Cleaning requests for rooms, halls, bathrooms, or any common area." },
+  { name: "Security", icon: "🛡️", desc: "Concerns related to guards, locks, lost keys, cameras, unauthorized access, safety." },
+  { name: "Internet", icon: "🌐", desc: "Connectivity issues with Wi-Fi, LAN, internet speed, access, or technical problems." },
+  { name: "Parking", icon: "🚗", desc: "Parking slot allocation, vehicle management, unauthorized parking, lot maintenance." },
+  { name: "Vehicle", icon: "🚗", desc: "Campus vehicle maintenance, breakdowns, repairs, servicing, transport-related issues." },
+  { name: "Other", icon: "❓", desc: "Any miscellaneous issue not fitting above categories; describe clearly." },
 ];
 
 const keywords = {
@@ -108,6 +108,32 @@ export default function StaffDashboard() {
   const [userRole, setUserRole] = useState("staff");
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Use room data hook
+  const { data: roomData, loading: roomLoading, error: roomError } = useRoomData();
+
+  // Room selection state
+  const [selectedBuilding, setSelectedBuilding] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [buildingSearch, setBuildingSearch] = useState("");
+  const [locationSearch, setLocationSearch] = useState("");
+  const [showBuildingDropdown, setShowBuildingDropdown] = useState(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+  // Close one dropdown when the other opens
+  const toggleBuildingDropdown = () => {
+    setShowBuildingDropdown((prev) => {
+      if (!prev) setShowLocationDropdown(false);
+      return !prev;
+    });
+  };
+
+  const toggleLocationDropdown = () => {
+    setShowLocationDropdown((prev) => {
+      if (!prev) setShowBuildingDropdown(false);
+      return !prev;
+    });
+  };
 
   // AUTH: set user email, userName, and role
   useEffect(() => {
@@ -231,6 +257,22 @@ export default function StaffDashboard() {
       userType: "staff" // Mark as staff complaint
     };
 
+    // Validate building and location against room data if available
+    if (roomData && !roomLoading && !roomError) {
+      if (!roomData.buildings.includes(complaintData.building)) {
+        alert("Invalid building/hostel name. Please select a valid building or hostel.");
+        return;
+      }
+      const roomsInBuilding = roomData.roomsByBuilding[complaintData.building] || [];
+      const locationValid = roomsInBuilding.some(
+        (room) => room.roomNo === complaintData.location || room.fullName === complaintData.location
+      );
+      if (!locationValid) {
+        alert("Invalid room/location. Please select a valid room in the selected building or hostel.");
+        return;
+      }
+    }
+
     try {
       const docRef = await addDoc(collection(db, "complaints"), complaintData);
 
@@ -336,6 +378,33 @@ export default function StaffDashboard() {
     setNotifications([]);
   };
 
+  // Room selection handlers
+  const handleBuildingChange = (building) => {
+    setSelectedBuilding(building);
+    setSelectedLocation(""); // Reset location when building changes
+    setShowBuildingDropdown(false);
+  };
+
+  const handleLocationChange = (location) => {
+    setSelectedLocation(location);
+    setShowLocationDropdown(false);
+  };
+
+  // Filter buildings based on search
+  const filteredBuildings = roomData && roomData.buildings
+    ? roomData.buildings.filter(building =>
+        building.toLowerCase().includes(buildingSearch.toLowerCase())
+      )
+    : [];
+
+  // Filter locations based on selected building and search
+  const filteredLocations = selectedBuilding && roomData && roomData.roomsByBuilding[selectedBuilding]
+    ? roomData.roomsByBuilding[selectedBuilding].filter(room =>
+        room.roomNo.toLowerCase().includes(locationSearch.toLowerCase()) ||
+        room.fullName.toLowerCase().includes(locationSearch.toLowerCase())
+      )
+    : [];
+
   // AUTH GUARD
   if (userRole !== "staff") {
     return (
@@ -416,30 +485,23 @@ export default function StaffDashboard() {
             {profileDropdown && (
               <div className="absolute right-0 mt-2 bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-2xl z-50 min-w-[180px] border border-blue-100"
                 style={{ transform: "translateY(5px)", boxShadow: "0 2px 16px rgba(30,64,175,0.16)" }}>
-                {/* Profile Info */}
-                <div className="px-4 py-3 border-b border-blue-100">
-                  <p className="text-sm font-semibold text-blue-700">{userName}</p>
-                  <p className="text-xs text-blue-600">Role: Staff</p>
-                  <p className="text-xs text-gray-500 truncate">{userEmail}</p>
-                </div>
-                
-                <button
-                  className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
-                  onClick={() => {
-                    setShowChangePassword(true);
-                    setProfileDropdown(false);
-                  }}
-                >
-                  <Settings className="w-5 h-5" /> Change Password
-                </button>
-                <button
-                  className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
-                  onClick={() =>
-                    signOut(auth).then(() => (window.location.href = "/login"))
-                  }
-                >
-                  <LogOut className="w-5 h-5" /> Logout
-                </button>
+          <button
+            className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
+            onClick={() => {
+              setShowChangePassword(true);
+              setProfileDropdown(false);
+            }}
+          >
+            <Settings className="w-5 h-5" /> Change Password
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-4 py-3 hover:bg-blue-200/50 text-blue-700 text-left text-sm font-medium rounded-lg transition-all duration-150"
+            onClick={() =>
+              signOut(auth).then(() => (window.location.href = "/login"))
+            }
+          >
+            <LogOut className="w-5 h-5" /> Logout
+          </button>
               </div>
             )}
           </div>
@@ -528,7 +590,7 @@ export default function StaffDashboard() {
                 className="grid grid-cols-1 gap-7 max-w-4xl mx-auto"
               >
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-4">
-                  {staffCategories.map((cat) => (
+                  {categories.filter(cat => cat.name !== "Vehicle" && cat.name !== "Parking").map((cat) => (
                     <Card
                       key={cat.name}
                       onClick={() => setActiveCategory(cat.name)}
@@ -551,8 +613,90 @@ export default function StaffDashboard() {
                   ))}
                 </div>
                 <Input name="subject" placeholder="Subject" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
-                <Input name="building" placeholder="Building/Department" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
-                <Input name="location" placeholder="Specific Location (Room Number)" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
+
+                {/* Building Selection */}
+                <div className="relative">
+                  <div
+                    className="w-full p-3 rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150 cursor-pointer flex justify-between items-center"
+                    onClick={() => setShowBuildingDropdown(!showBuildingDropdown)}
+                  >
+                    <span className={selectedBuilding ? "text-gray-900" : "text-gray-500"}>
+                      {selectedBuilding || "Select Building/Department"}
+                    </span>
+                    <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${showBuildingDropdown ? 'rotate-180' : ''}`} />
+                  </div>
+                  {showBuildingDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl z-50 border border-gray-200 max-h-60 overflow-y-auto">
+                      <div className="p-2">
+                        <Input
+                          placeholder="Search buildings..."
+                          value={buildingSearch}
+                          onChange={(e) => setBuildingSearch(e.target.value)}
+                          className="mb-2 rounded-lg"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        {filteredBuildings.length === 0 ? (
+                          <p className="text-gray-500 text-center py-4">No buildings found</p>
+                        ) : (
+                          filteredBuildings.map((building) => (
+                            <div
+                              key={building}
+                              className="p-3 hover:bg-blue-50 cursor-pointer rounded-lg transition-colors"
+                              onClick={() => handleBuildingChange(building)}
+                            >
+                              {building}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Location Selection */}
+                <div className="relative">
+                  <div
+                    className={`w-full p-3 rounded-xl shadow-inner transition-all duration-150 cursor-pointer flex justify-between items-center ${
+                      selectedBuilding ? 'bg-white/60 hover:bg-blue-50' : 'bg-gray-100 cursor-not-allowed'
+                    }`}
+                    onClick={() => selectedBuilding && setShowLocationDropdown(!showLocationDropdown)}
+                  >
+                    <span className={selectedLocation ? "text-gray-900" : "text-gray-500"}>
+                      {selectedLocation || (selectedBuilding ? "Select Specific Location" : "Select building first")}
+                    </span>
+                    <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${showLocationDropdown ? 'rotate-180' : ''}`} />
+                  </div>
+                  {showLocationDropdown && selectedBuilding && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl z-50 border border-gray-200 max-h-60 overflow-y-auto">
+                      <div className="p-2">
+                        <Input
+                          placeholder="Search locations..."
+                          value={locationSearch}
+                          onChange={(e) => setLocationSearch(e.target.value)}
+                          className="mb-2 rounded-lg"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        {filteredLocations.length === 0 ? (
+                          <p className="text-gray-500 text-center py-4">No locations found</p>
+                        ) : (
+                          filteredLocations.map((room) => (
+                            <div
+                              key={`${room.roomNo}-${room.fullName}`}
+                              className="p-3 hover:bg-blue-50 cursor-pointer rounded-lg transition-colors"
+                              onClick={() => handleLocationChange(room.fullName)}
+                            >
+                              <div className="font-medium">{room.fullName}</div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Hidden inputs for form submission */}
+                <input type="hidden" name="building" value={selectedBuilding} />
+                <input type="hidden" name="location" value={selectedLocation} />
                 <Textarea
                   name="description"
                   placeholder="Detailed Description of the Issue"
