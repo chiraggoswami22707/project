@@ -85,9 +85,36 @@ const categories = [
 
 // Predefined time slots with AM/PM format
 const timeSlots = [
-  "9-10 AM", "10-11 AM", "11-12 AM", "12-1 PM", "1-2 PM", "2-3 PM", 
+  "9-10 AM", "10-11 AM", "11-12 AM", "12-1 PM", "1-2 PM", "2-3 PM",
   "3-4 PM", "4-5 PM", "5-6 PM", "6-7 PM", "7-8 PM"
 ];
+
+// Function to check if current time is within allowed submission slots
+function isWithinSubmissionTime() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+
+  // Define allowed slots as [startHour, startMin, endHour, endMin]
+  const allowedSlots = [
+    [9, 0, 10, 0], // 9-10 AM
+    [10, 0, 11, 0], // 10-11 AM
+    [11, 0, 12, 0], // 11-12 AM
+    [12, 0, 13, 0], // 12-1 PM
+    [13, 0, 14, 0], // 1-2 PM
+    [15, 0, 16, 0], // 3-4 PM
+    // Add more as needed
+  ];
+
+  return allowedSlots.some(([sh, sm, eh, em]) => {
+    const start = sh * 60 + sm;
+    const end = eh * 60 + em;
+    const current = currentHour * 60 + currentMinute;
+    return current >= start && current < end;
+  });
+}
+
+const highPriorityKeywords = ["urgent", "immediate", "asap", "critical", "emergency", "apark", "broken", "leak"];
 
 const keywords = {
   high: ["urgent", "immediate", "asap", "critical", "emergency"],
@@ -626,7 +653,7 @@ export default function StudentDashboard() {
                     </option>
                   ))}
                 </select>
-                <Input name="location" placeholder="Specific Location" required className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150" />
+                {/* Removed Specific Location input as per request */}
                 <Textarea
                   name="description"
                   placeholder="Detailed Description"
@@ -653,6 +680,13 @@ export default function StudentDashboard() {
                         setTimeSlotError("");
                       }}
                       minDate={new Date()}
+                      filterDate={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const maxDate = new Date(today);
+                        maxDate.setDate(today.getDate() + 6);
+                        return date >= today && date <= maxDate;
+                      }}
                       className="w-full p-3 rounded-xl border border-gray-300 shadow-inner"
                       dateFormat="yyyy-MM-dd"
                       placeholderText="Pick a date"
@@ -859,6 +893,7 @@ export default function StudentDashboard() {
               Complaint Details
             </h2>
             <div className="space-y-3">
+              <p><strong>Complaint ID:</strong> {modalData.id}</p>
               <p><strong>Subject:</strong> {modalData.subject}</p>
               <p><strong>Category:</strong> {modalData.category}</p>
               <p><strong>Priority:</strong> 
@@ -962,11 +997,13 @@ export default function StudentDashboard() {
             <h2 className="text-2xl font-extrabold mb-4 text-green-700 drop-shadow-lg">
               Complaint Submitted Successfully!
             </h2>
+            <p className="mb-2"><strong>Complaint ID:</strong> {confirmationData.id}</p>
             <p className="mb-2"><strong>Subject:</strong> {confirmationData.subject}</p>
             <p className="mb-2"><strong>Category:</strong> {confirmationData.category}</p>
             <p className="mb-2"><strong>Priority:</strong> {confirmationData.priority}</p>
             <p className="mb-2"><strong>Building:</strong> {confirmationData.building}</p>
-            <p className="mb-2"><strong>Location:</strong> {confirmationData.location}</p>
+            <p className="mb-2"><strong>Room:</strong> {confirmationData.roomNo || "N/A"}</p>
+            <p className="mb-2"><strong>Description:</strong> {confirmationData.description}</p>
             {confirmationData.photoUrl && (
               <div className="mb-2">
                 <strong>Uploaded Photo:</strong>
