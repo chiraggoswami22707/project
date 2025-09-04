@@ -2,7 +2,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { db, auth } from "@/firebase/config";
+import { db, auth, storage } from "@/firebase/config";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   collection,
   addDoc,
@@ -130,6 +131,7 @@ export default function StudentDashboard() {
   const [selectedRoomObject, setSelectedRoomObject] = useState(null);
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [blocks, setBlocks] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // Use the custom hook to load room data
   const { data: roomData, loading: roomDataLoading, error: roomDataError } = useRoomData();
@@ -306,6 +308,15 @@ export default function StudentDashboard() {
     }
 
     try {
+      // Upload photo if selected
+      if (selectedFile) {
+        const timestamp = Date.now();
+        const fileRef = ref(storage, `complaintPhotos/${userEmail}/${timestamp}_${selectedFile.name}`);
+        await uploadBytes(fileRef, selectedFile);
+        const photoUrl = await getDownloadURL(fileRef);
+        complaintData.photoUrl = photoUrl;
+      }
+
       const docRef = await addDoc(collection(db, "complaints"), complaintData);
 
       const confirmationComplaint = {
@@ -329,6 +340,7 @@ export default function StudentDashboard() {
     setSelectedRoomObject(null);
     setSearchQuery("");
     setSuggestions([]);
+    setSelectedFile(null);
   };
 
   // Delete handling
@@ -621,6 +633,15 @@ export default function StudentDashboard() {
                   required
                   className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150"
                 />
+                <div>
+                  <label className="block text-blue-700 font-bold mb-2">Upload Photo (optional)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setSelectedFile(e.target.files[0])}
+                    className="w-full p-3 rounded-xl border border-gray-300 shadow-inner"
+                  />
+                </div>
                 {/* Student time slot PICKER (Date + Time) */}
                 {userRole === "student" && (
                   <div>
@@ -865,6 +886,12 @@ export default function StudentDashboard() {
               <p><strong>Building:</strong> {modalData.building}</p>
               <p><strong>Location:</strong> {modalData.location}</p>
               <p><strong>Description:</strong> {modalData.description}</p>
+              {modalData.photoUrl && (
+                <div className="mt-4">
+                  <strong>Uploaded Photo:</strong>
+                  <img src={modalData.photoUrl} alt="Uploaded complaint" className="mt-2 max-w-full rounded-lg shadow-md" />
+                </div>
+              )}
               <p><strong>Submitted:</strong> {formatDateTimeFull(modalData.createdAt)}</p>
               {modalData.timeSlot && (
                 <p><strong>Time Slot:</strong> {modalData.timeSlot}</p>
@@ -940,6 +967,12 @@ export default function StudentDashboard() {
             <p className="mb-2"><strong>Priority:</strong> {confirmationData.priority}</p>
             <p className="mb-2"><strong>Building:</strong> {confirmationData.building}</p>
             <p className="mb-2"><strong>Location:</strong> {confirmationData.location}</p>
+            {confirmationData.photoUrl && (
+              <div className="mb-2">
+                <strong>Uploaded Photo:</strong>
+                <img src={confirmationData.photoUrl} alt="Uploaded complaint" className="mt-1 max-w-full rounded-lg shadow-md" />
+              </div>
+            )}
             {confirmationData.timeSlot && (
               <p className="mb-2"><strong>Time Slot:</strong> {confirmationData.timeSlot}</p>
             )}
