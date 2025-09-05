@@ -24,10 +24,10 @@ const categories = [
   { name: "Electrical", icon: "⚡", desc: "Issues related to electrical systems, wiring, and power supply." },
   { name: "Plumbing", icon: "🔧", desc: "Problems with water pipes, faucets, and drainage." },
   { name: "Cleaning", icon: "🧹", desc: "Maintenance and cleaning services for facilities." },
-  { name: "Security", icon: "🛡️", desc: "Concerns about safety, access control, and surveillance." },
+  { name: "Security", icon: "🛡", desc: "Concerns about safety, access control, and surveillance." },
   { name: "Internet", icon: "📶", desc: "Network connectivity and Wi-Fi related issues." },
   { name: "Parking", icon: "🚗", desc: "Parking space availability and vehicle-related problems." },
-  { name: "Other", icon: "🖥️", desc: "Miscellaneous complaints not covered by other categories." },
+  { name: "Other", icon: "🖥", desc: "Miscellaneous complaints not covered by other categories." },
 ];
 
 // --- FILTER OPTIONS ---
@@ -331,7 +331,7 @@ export default function SupervisorCategoryPage() {
               <span className="font-medium">Date:</span> {formatDate(comp.createdAt)}
             </div>
             <div className="flex gap-2 mt-2 mb-2">
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusClass(getEffectiveStatus(comp))}`}>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusClass(getEffectiveStatus(comp))}`}>
                 {getEffectiveStatus(comp)}
               </span>
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${priorityClass(comp.priority)}`}>
@@ -416,17 +416,26 @@ export default function SupervisorCategoryPage() {
                   <span className="font-semibold">Building:</span>
                   <span>{selectedComplaint.building || "N/A"}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold">Location:</span>
-                  <span>{selectedComplaint.location || "N/A"}</span>
-                </div>
+<div className="flex justify-between">
+  <span className="font-semibold">Room:</span>
+  <span>
+    {selectedComplaint.roomNo && selectedComplaint.roomNo !== "N/A"
+      ? selectedComplaint.roomNo
+      : selectedComplaint.location && selectedComplaint.location !== "N/A"
+      ? selectedComplaint.location
+      : "N/A"}
+  </span>
+</div>
                 <div className="flex justify-between">
                   <span className="font-semibold">Description:</span>
                   <span>{selectedComplaint.description}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold">Submitted By:</span>
-                  <span>{selectedComplaint.email || "N/A"}</span>
+                  <span>
+                    {selectedComplaint.email || "N/A"}{" "}
+                    {selectedComplaint.email && selectedComplaint.email.includes("@staff.com") ? "(Staff)" : "(Student)"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-semibold">Time Slot Booked:</span>

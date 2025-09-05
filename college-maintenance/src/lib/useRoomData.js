@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 
 export default function useRoomData() {
@@ -12,83 +10,65 @@ export default function useRoomData() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchJsonData = async () => {
+    async function fetchRoomData() {
       try {
-        setLoading(true);
-        setError(null);
+        const response = await fetch("/roomStore.json");
+        if (!response.ok) {
+          throw new Error("Failed to fetch room data");
+        }
+        const rawData = await response.json();
 
-        // Fetch both JSON files from the public folder
-        const [academicResponse, hostelResponse] = await Promise.all([
-          fetch("/roomStore.json"),
-          fetch("/All_Hostels_Rooms.json")
-        ]);
+        // Separate academic blocks and hostels
+        const academicRooms = rawData.filter(room => room["Building Name"]);
+        const hostelRooms = rawData.filter(room => room["Hostel"]);
 
-        const academicData = await academicResponse.json();
-        const hostelData = await hostelResponse.json();
+        // Transform academic rooms
+        const transformedAcademicRooms = academicRooms.map((room) => ({
+          building: room["Building Name"]?.trim() || "",
+          roomNo: room["Room No."]?.trim() || "",
+          labName: room["Lab/Room Name"]?.trim() || "",
+          fullName: `${room["Room No."]?.trim() || ""} (${room["Lab/Room Name"]?.trim() || ""})`,
+        }));
 
-        // Combine the data arrays
-        const jsonData = [...academicData, ...hostelData];
+        // Transform hostel rooms
+        const transformedHostelRooms = hostelRooms.map((room) => ({
+          building: room["Hostel"]?.trim() || "",
+          roomNo: room["Room No"]?.trim() || "",
+          labName: `${room["Room Type"]?.trim() || ""} - ${room["Floor/Block"]?.trim() || ""}`,
+          fullName: `${room["Room No"]?.trim() || ""} (${room["Room Type"]?.trim() || ""} - ${room["Floor/Block"]?.trim() || ""})`,
+        }));
 
-        // Parse the data to extract buildings and rooms
-        let buildings = [];
-        let roomsByBuilding = {};
-        let allRooms = [];
+        // Combine all rooms
+        const transformedRooms = [...transformedAcademicRooms, ...transformedHostelRooms];
 
-        jsonData.forEach((item) => {
-          let building = "";
-          let roomNo = "";
-          let labName = "";
-          let fullName = "";
-
-          // Check if it's a hostel entry
-          if (item.Hostel) {
-            // Hostel structure
-            building = item.Hostel.trim();
-            const floorBlock = item["Floor/Block"] || item["Floor\/Block"] || "";
-            roomNo = item["Room No"] || item.roomNo || "";
-            labName = item["Room Type"] || "Hostel Room";
-            fullName = `${floorBlock} - ${roomNo} (${labName})`;
-          } else {
-            // Academic building structure
-            building = item["Building Name"]?.trim() || item.building?.trim() || "";
-            roomNo = item["Room No."]?.trim() || item.roomNo?.trim() || "";
-            labName = item["Lab/Room Name"]?.trim() || item.labName?.trim() || "";
-            fullName = `${roomNo} - ${labName}`;
+        // Create roomsByBuilding map
+        const roomsByBuilding = {};
+        transformedRooms.forEach((room) => {
+          if (!roomsByBuilding[room.building]) {
+            roomsByBuilding[room.building] = [];
           }
-
-          if (!building) return;
-
-          // Add to buildings if not already present
-          if (!buildings.includes(building)) {
-            buildings.push(building);
-            roomsByBuilding[building] = [];
-          }
-
-          // Add room to the building
-          roomsByBuilding[building].push({
-            roomNo,
-            labName,
-            fullName,
-          });
-
-          // Add to allRooms for search
-          allRooms.push({
-            building,
-            roomNo,
-            labName,
-            fullName,
-          });
+          roomsByBuilding[room.building].push(room);
         });
 
-        setData({ buildings, roomsByBuilding, allRooms });
+        // Create buildings array sorted alphabetically with hostels first
+        const allBuildings = Object.keys(roomsByBuilding);
+        const hostels = allBuildings.filter(b => transformedHostelRooms.some(room => room.building === b)).sort();
+        const academicBlocks = allBuildings.filter(b => !hostels.includes(b)).sort();
+        const buildings = [...hostels, ...academicBlocks];
+
+        setData({
+          buildings,
+          roomsByBuilding,
+          allRooms: transformedRooms,
+        });
+        setLoading(false);
       } catch (err) {
         setError(err);
-      } finally {
         setLoading(false);
       }
-    };
+    }
 
-    fetchJsonData();
+    fetchRoomData();
   }, []);
 
   return { data, loading, error };

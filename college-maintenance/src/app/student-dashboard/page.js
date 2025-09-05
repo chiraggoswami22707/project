@@ -103,6 +103,7 @@ function isWithinSubmissionTime() {
     [12, 0, 13, 0], // 12-1 PM
     [13, 0, 14, 0], // 1-2 PM
     [15, 0, 16, 0], // 3-4 PM
+    [18, 0, 19, 0], // 6-7 PM
     // Add more as needed
   ];
 
@@ -121,6 +122,13 @@ const keywords = {
   medium: ["important", "needs attention", "moderate"],
   low: ["minor", "trivial", "not urgent"],
 };
+
+// Added high priority keywords for detection in description input
+const highPriorityKeywordSet = new Set([
+  "fire", "spark", "hazard", "safety", "electricity",
+  "urgent", "immediate", "asap", "critical", "emergency",
+  "apark", "broken", "leak"
+]);
 
 const notifyMaintenanceTeam = async (complaint) => {
   // Placeholder for notification logic
@@ -159,6 +167,10 @@ export default function StudentDashboard() {
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [blocks, setBlocks] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+
+  // New state to track if complaint is high priority based on description input
+  const [isHighPriority, setIsHighPriority] = useState(false);
+  const [description, setDescription] = useState("");
 
   // Use the custom hook to load room data
   const { data: roomData, loading: roomDataLoading, error: roomDataError } = useRoomData();
@@ -292,34 +304,58 @@ export default function StudentDashboard() {
     setRooms(roomData.roomsByBuilding[room.building] || []);
   };
 
-  // Complaint submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setTimeSlotError("");
-    const formData = new FormData(e.target);
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
-    const complaintData = {
-      subject: formData.get("subject"),
-      building: selectedRoomObject ? selectedRoomObject.building : "",
-      roomNo: selectedRoomObject ? selectedRoomObject.roomNo : "",
-      labName: selectedRoomObject ? selectedRoomObject.labName : "",
-      location: formData.get("location"),
-      description: formData.get("description"),
-      category: activeCategory,
-      priority: autoAssignPriority(formData.get("description")),
-      status: "Pending",
-      createdAt: new Date().toISOString(),
-      email: userEmail,
-      userType: userType,
-    };
+// Complaint submission
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setTimeSlotError("");
+  const formData = new FormData(e.target);
 
-    // Student time slot logic
-    if (userRole === "student") {
+  if (!selectedRoomObject || !selectedRoomObject.building || !selectedRoomObject.roomNo) {
+    alert("Please select a valid building and room.");
+    return;
+  }
+
+  const descriptionText = formData.get("description")?.toLowerCase() || "";
+  // Determine if high priority based on keywords
+  const highPriorityDetected = Array.from(highPriorityKeywordSet).some(keyword =>
+    descriptionText.includes(keyword)
+  );
+
+  const complaintData = {
+    subject: formData.get("subject"),
+    building: selectedRoomObject.building,
+    roomNo: selectedRoomObject.roomNo,
+    labName: selectedRoomObject.labName || "",
+    location: formData.get("location"),
+    description: formData.get("description"),
+    category: activeCategory,
+    priority: highPriorityDetected ? "High" : "Normal",
+    status: "Pending",
+    createdAt: serverTimestamp(),
+    email: userEmail,
+    userType: userType,
+  };
+
+  // Student time slot logic
+  if (userRole === "student") {
+    if (!highPriorityDetected) {
+      // Check if current time is within allowed submission slots for normal complaints
+      if (!isWithinSubmissionTime()) {
+        setTimeSlotError("Complaints can only be submitted during allowed time slots: 9-10 AM, 10-11 AM, 11-12 AM, 12-1 PM, 1-2 PM, 3-4 PM, 6-7 PM.");
+        return;
+      }
       if (!slotDate || !slotTime) {
         setTimeSlotError("Please select date and time for your slot.");
         return;
       }
-      const slotDateStr = slotDate.toISOString().slice(0, 10); // "YYYY-MM-DD"
+      const slotDateStr = formatLocalDate(slotDate); // "YYYY-MM-DD"
       const slotValue = `${slotDateStr} ${slotTime}`;
       // Check if slot is already booked
       const q = query(collection(db, "complaints"));
@@ -328,11 +364,21 @@ export default function StudentDashboard() {
         .map((doc) => doc.data().timeSlot)
         .filter(Boolean);
       if (booked.includes(slotValue)) {
-        setTimeSlotError("This slot is fully booked, please choose another one.");
+        setTimeSlotError("This time slot is booked, please choose another.");
         return;
       }
       complaintData.timeSlot = slotValue;
+    } else {
+      // High priority complaints must select slot but bypass booking check
+      if (!slotDate || !slotTime) {
+        setTimeSlotError("Please select date and time for your slot.");
+        return;
+      }
+      const slotDateStr = formatLocalDate(slotDate);
+      const slotValue = `${slotDateStr} ${slotTime}`;
+      complaintData.timeSlot = slotValue;
     }
+  }
 
     try {
       // Upload photo if selected
@@ -659,6 +705,18 @@ export default function StudentDashboard() {
                   placeholder="Detailed Description"
                   required
                   className="rounded-xl shadow-inner bg-white/60 hover:bg-blue-50 transition-all duration-150"
+                  value={description}
+                  onChange={(e) => {
+                    const desc = e.target.value;
+                    setDescription(desc);
+                    const highPriorityDetected = Array.from(highPriorityKeywordSet).some(keyword =>
+                      desc.toLowerCase().includes(keyword)
+                    );
+                    setIsHighPriority(highPriorityDetected);
+                    if (highPriorityDetected) {
+                      setTimeSlotError("");
+                    }
+                  }}
                 />
                 <div>
                   <label className="block text-blue-700 font-bold mb-2">Upload Photo (optional)</label>
@@ -684,7 +742,10 @@ export default function StudentDashboard() {
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
                         const maxDate = new Date(today);
-                        maxDate.setDate(today.getDate() + 6);
+                        // High-priority complaints can select dates up to 7 weeks (49 days)
+                        // Normal complaints are limited to 7 days
+                        const maxDays = isHighPriority ? 49 : 6;
+                        maxDate.setDate(today.getDate() + maxDays);
                         return date >= today && date <= maxDate;
                       }}
                       className="w-full p-3 rounded-xl border border-gray-300 shadow-inner"
@@ -710,8 +771,8 @@ export default function StudentDashboard() {
                     {timeSlotError && (
                       <div className="text-red-600 text-sm font-semibold mt-1">{timeSlotError}</div>
                     )}
-                    {/* Slot availability info */}
-                    {slotDate && slotTime && allBookedSlots.some(
+                    {/* Slot availability info - only show for normal complaints */}
+                    {!isHighPriority && slotDate && slotTime && allBookedSlots.some(
                       slot =>
                         slot.date === slotDate.toISOString().slice(0, 10) &&
                         slot.time === slotTime
@@ -752,7 +813,7 @@ export default function StudentDashboard() {
                         </div>
                         {comp.timeSlot && (
                           <div className="flex items-center gap-1 text-blue-700 font-semibold text-sm mt-1">
-                            <Clock className="w-4 h-4" /> Slot: {comp.timeSlot}
+                            <Clock className="w-4 h-4" /> Slot: {comp.timeSlot} (Booked)
                           </div>
                         )}
                       </div>
@@ -847,7 +908,7 @@ export default function StudentDashboard() {
                         )}
                         {comp.timeSlot && (
                           <div className="flex items-center gap-1 text-blue-700 font-semibold text-sm mt-1">
-                            <Clock className="w-4 h-4" /> Slot: {comp.timeSlot}
+                            <Clock className="w-4 h-4" /> Slot: {comp.timeSlot} (Booked)
                           </div>
                         )}
                       </div>
@@ -919,7 +980,7 @@ export default function StudentDashboard() {
                 </span>
               </p>
               <p><strong>Building:</strong> {modalData.building}</p>
-              <p><strong>Location:</strong> {modalData.location}</p>
+              <p><strong>Room:</strong> {modalData.roomNo || "N/A"}</p>
               <p><strong>Description:</strong> {modalData.description}</p>
               {modalData.photoUrl && (
                 <div className="mt-4">
@@ -929,7 +990,7 @@ export default function StudentDashboard() {
               )}
               <p><strong>Submitted:</strong> {formatDateTimeFull(modalData.createdAt)}</p>
               {modalData.timeSlot && (
-                <p><strong>Time Slot:</strong> {modalData.timeSlot}</p>
+                <p><strong>Time Slot:</strong> {modalData.timeSlot} (Booked)</p>
               )}
               {modalData.reopenedAt && (
                 <p><strong>Reopened:</strong> {formatDateTimeFull(modalData.reopenedAt)}</p>
@@ -1011,7 +1072,7 @@ export default function StudentDashboard() {
               </div>
             )}
             {confirmationData.timeSlot && (
-              <p className="mb-2"><strong>Time Slot:</strong> {confirmationData.timeSlot}</p>
+              <p className="mb-2"><strong>Time Slot:</strong> {confirmationData.timeSlot} (Booked)</p>
             )}
             <p className="mb-2">
               <strong>Status:</strong>{" "}

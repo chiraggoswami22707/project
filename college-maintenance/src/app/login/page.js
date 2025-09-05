@@ -6,6 +6,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/firebase/config";
 import { doc, getDoc } from "firebase/firestore";
 import Image from "next/image";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const MAINTENANCE_KEY = "gehuservice@04";
 
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [captcha, setCaptcha] = useState("");
   const [captchaInput, setCaptchaInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showMaintenanceKeyModal, setShowMaintenanceKeyModal] = useState(false);
   const router = useRouter();
 
   // captcha generator
@@ -50,6 +52,8 @@ export default function LoginPage() {
 
       if (docSnap.exists()) {
         const userData = docSnap.data();
+        console.log("User email:", email);
+        console.log("User role:", userData.role);
         setRole(userData.role);
 
         // Store user data in localStorage for dashboard access
@@ -58,16 +62,18 @@ export default function LoginPage() {
           uid: userCred.user.uid
         }));
 
-        // Check for supervisor email domain
-        if (email.endsWith("@sup.com")) {
+        // Redirect based on user role only, without email domain check
+        if (userData.role === "supervisor") {
           router.push("/supervisor-dashboard");
         } else if (userData.role === "maintenance") {
           if (key !== MAINTENANCE_KEY) {
-            alert("Invalid Maintenance Key!");
             setIsLoading(false);
+            setShowMaintenanceKeyModal(true);
             return;
           }
+          console.log("Redirecting to maintenance dashboard...");
           router.push("/maintenance-dashboard");
+          console.log("Redirected to maintenance dashboard.");
         } else if (userData.role === "student") {
           router.push("/student-dashboard");
         } else if (userData.role === "staff") {
@@ -186,6 +192,22 @@ export default function LoginPage() {
           </p>
         </form>
       </div>
+
+      <Dialog open={showMaintenanceKeyModal} onOpenChange={setShowMaintenanceKeyModal}>
+        <DialogContent className="p-6 rounded-lg shadow-lg bg-white max-w-sm mx-auto mt-20 relative">
+          <DialogHeader>
+            <DialogTitle>Enter Maintenance Key</DialogTitle>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end gap-2">
+            <button
+              onClick={() => setShowMaintenanceKeyModal(false)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              OK
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-} // test comment
+}

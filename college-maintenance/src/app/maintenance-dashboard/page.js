@@ -36,6 +36,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { PlusCircle } from "lucide-react";
 import { useRef } from "react";
+import useRoomData from "@/lib/useRoomData";
 
 function formatDateTimeFull(dateInput) {
   let date;
@@ -84,6 +85,17 @@ const priorities = ["All Priority", "High", "Medium", "Low", "Reopened"];
 const statuses = ["All Status", "Pending", "In Progress", "Resolved", "Reopened"];
 
 export default function MaintenanceDashboard() {
+  // Room data hook
+  const { data: roomData, loading: roomLoading, error: roomDataError } = useRoomData();
+
+  // Building/Room filter states
+  const [selectedBlock, setSelectedBlock] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [selectedRoomObject, setSelectedRoomObject] = useState(null);
+  const [rooms, setRooms] = useState([]);
+
   const [complaints, setComplaints] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All Categories");
@@ -324,6 +336,19 @@ export default function MaintenanceDashboard() {
   }, [auth.currentUser]);
 
   useEffect(() => {
+    if (!roomData) return;
+    const allSuggestions = [];
+    roomData.buildings.forEach(building => {
+      allSuggestions.push({ type: 'building', value: building, label: building });
+      const buildingRooms = roomData.roomsByBuilding[building] || [];
+      buildingRooms.forEach(room => {
+        allSuggestions.push({ type: 'room', value: room.roomNo, label: room.fullName, building });
+      });
+    });
+    setSuggestions(allSuggestions);
+  }, [roomData]);
+
+  useEffect(() => {
     const q = collection(db, "complaints");
     let initialLoad = true;
     const unsub = onSnapshot(q, (snap) => {
@@ -356,6 +381,8 @@ export default function MaintenanceDashboard() {
     && (status === "All Status" || comp.status === status)
     && (priority === "All Priority" || comp.priority === priority || (priority === "Reopened" && comp.status === "Reopened"))
     && (dateFilter === "" || formatDateTimeFull(comp.createdAt).slice(0, 11) === formatDateTimeFull(dateFilter).slice(0, 11))
+    && (selectedBlock === "" || comp.building === selectedBlock)
+    && (selectedRoom === "" || comp.roomNo === selectedRoom)
   );
 
   // Get supervisor complaints (complaints assigned to the logged-in supervisor)
@@ -558,21 +585,19 @@ export default function MaintenanceDashboard() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">From Date</label>
-                <Calendar
-                  mode="single"
-                  selected={filterFromDate}
-                  onSelect={setFilterFromDate}
-                  placeholder="Select From Date"
+                <input
+                  type="date"
+                  value={filterFromDate ? filterFromDate.toISOString().split("T")[0] : ""}
+                  onChange={(e) => setFilterFromDate(e.target.value ? new Date(e.target.value) : null)}
                   className="w-full rounded-md border border-gray-300 p-2"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">To Date</label>
-                <Calendar
-                  mode="single"
-                  selected={filterToDate}
-                  onSelect={setFilterToDate}
-                  placeholder="Select To Date"
+                <input
+                  type="date"
+                  value={filterToDate ? filterToDate.toISOString().split("T")[0] : ""}
+                  onChange={(e) => setFilterToDate(e.target.value ? new Date(e.target.value) : null)}
                   className="w-full rounded-md border border-gray-300 p-2"
                 />
               </div>
@@ -711,7 +736,7 @@ export default function MaintenanceDashboard() {
               <Settings className="w-5 h-5" />
               Filters
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-7 gap-5">
               <div>
                 <div className="font-medium text-sm mb-1">Search</div>
                 <Input
@@ -765,6 +790,94 @@ export default function MaintenanceDashboard() {
                   onChange={(e) => setDateFilter(e.target.value)}
                   className="rounded-xl"
                 />
+              </div>
+              <div>
+                <div className="font-medium text-sm mb-1">Building</div>
+                <select
+                  value={selectedBlock}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedBlock(val);
+                    setRooms(roomData?.roomsByBuilding[val] || []);
+                    setSelectedRoom("");
+                    setSelectedRoomObject(null);
+                  }}
+                  className="rounded-xl px-3 py-2 w-full bg-white border"
+                  disabled={roomLoading}
+                >
+                  <option value="">All Buildings</option>
+                  {roomData?.buildings?.map((building, index) => (
+                    <option key={`${building}-${index}`} value={building}>
+                      {building}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div className="font-medium text-sm mb-1">Room</div>
+                <select
+                  value={selectedRoom}
+                  onChange={(e) => {
+                    const roomNo = e.target.value;
+                    setSelectedRoom(roomNo);
+                    const room = rooms.find(r => r.roomNo === roomNo);
+                    setSelectedRoomObject(room);
+                  }}
+                  className="rounded-xl px-3 py-2 w-full bg-white border"
+                  disabled={!rooms.length}
+                >
+                  <option value="">All Rooms</option>
+                  {rooms.map((room, index) => (
+                    <option key={`${room.roomNo}-${index}`} value={room.roomNo}>
+                      {room.fullName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div className="font-medium text-sm mb-1">Search Building/Room</div>
+                <div className="relative z-30">
+                  <Input
+                    placeholder="Search building or room..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="rounded-xl pr-10"
+                    disabled={roomLoading}
+                  />
+                  {searchQuery && (
+                    <div className="absolute top-full left-0 right-0 bg-white border rounded-xl shadow-lg z-40 max-h-48 overflow-y-auto mt-1">
+                      {suggestions
+                        .filter(suggestion =>
+                          suggestion.label.toLowerCase().includes(searchQuery.toLowerCase())
+                        )
+                        .slice(0, 10)
+                        .map((suggestion, index) => (
+                          <div
+                            key={index}
+                            className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
+                            onClick={() => {
+                              if (suggestion.type === 'building') {
+                                setSelectedBlock(suggestion.value);
+                                setRooms(roomData?.roomsByBuilding[suggestion.value] || []);
+                                setSelectedRoom("");
+                                setSelectedRoomObject(null);
+                              } else {
+                                setSelectedBlock(suggestion.building);
+                                setRooms(roomData?.roomsByBuilding[suggestion.building] || []);
+                                setSelectedRoom(suggestion.value);
+                                const room = roomData?.roomsByBuilding[suggestion.building]?.find(r => r.roomNo === suggestion.value);
+                                setSelectedRoomObject(room);
+                              }
+                              setSearchQuery("");
+                            }}
+                          >
+                            <div className="font-medium">{suggestion.label}</div>
+                            <div className="text-xs text-gray-500">{suggestion.type === 'building' ? 'Building' : `Room in ${suggestion.building}`}</div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Card>

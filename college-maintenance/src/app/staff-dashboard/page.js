@@ -1,6 +1,6 @@
   "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { db, auth } from "@/firebase/config";
 import {
   collection,
@@ -112,6 +112,7 @@ export default function StaffDashboard() {
   // Use room data hook
   const { data: roomData, loading: roomLoading, error: roomError } = useRoomData();
 
+
   // Room selection state
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -119,6 +120,10 @@ export default function StaffDashboard() {
   const [locationSearch, setLocationSearch] = useState("");
   const [showBuildingDropdown, setShowBuildingDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+  // Refs for dropdowns to detect outside clicks
+  const buildingDropdownRef = useRef(null);
+  const locationDropdownRef = useRef(null);
 
   // Close one dropdown when the other opens
   const toggleBuildingDropdown = () => {
@@ -154,6 +159,46 @@ export default function StaffDashboard() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        buildingDropdownRef.current &&
+        !buildingDropdownRef.current.contains(event.target)
+      ) {
+        setShowBuildingDropdown(false);
+      }
+      if (
+        locationDropdownRef.current &&
+        !locationDropdownRef.current.contains(event.target)
+      ) {
+        setShowLocationDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  
+  // Debounce helper
+  function useDebounce(value, delay) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+    return debouncedValue;
+  }
+
+  // Debounced search inputs
+  const debouncedBuildingSearch = useDebounce(buildingSearch, 300);
+  const debouncedLocationSearch = useDebounce(locationSearch, 300);
 
   // Fetch complaints by this staff member
   useEffect(() => {
@@ -393,15 +438,15 @@ export default function StaffDashboard() {
   // Filter buildings based on search
   const filteredBuildings = roomData && roomData.buildings
     ? roomData.buildings.filter(building =>
-        building.toLowerCase().includes(buildingSearch.toLowerCase())
+        building.toLowerCase().includes(debouncedBuildingSearch.toLowerCase())
       )
     : [];
 
   // Filter locations based on selected building and search
   const filteredLocations = selectedBuilding && roomData && roomData.roomsByBuilding[selectedBuilding]
     ? roomData.roomsByBuilding[selectedBuilding].filter(room =>
-        room.roomNo.toLowerCase().includes(locationSearch.toLowerCase()) ||
-        room.fullName.toLowerCase().includes(locationSearch.toLowerCase())
+        room.roomNo.toLowerCase().includes(debouncedLocationSearch.toLowerCase()) ||
+        room.fullName.toLowerCase().includes(debouncedLocationSearch.toLowerCase())
       )
     : [];
 
@@ -628,26 +673,48 @@ export default function StaffDashboard() {
                   {showBuildingDropdown && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl z-50 border border-gray-200 max-h-60 overflow-y-auto">
                       <div className="p-2">
-                        <Input
-                          placeholder="Search buildings..."
-                          value={buildingSearch}
-                          onChange={(e) => setBuildingSearch(e.target.value)}
-                          className="mb-2 rounded-lg"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        {filteredBuildings.length === 0 ? (
-                          <p className="text-gray-500 text-center py-4">No buildings found</p>
-                        ) : (
-                          filteredBuildings.map((building) => (
-                            <div
-                              key={building}
-                              className="p-3 hover:bg-blue-50 cursor-pointer rounded-lg transition-colors"
-                              onClick={() => handleBuildingChange(building)}
-                            >
-                              {building}
-                            </div>
-                          ))
-                        )}
+                <Input
+                  placeholder="Search buildings..."
+                  value={buildingSearch}
+                  onChange={(e) => setBuildingSearch(e.target.value)}
+                  className="mb-2 rounded-lg"
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Search buildings"
+                />
+                {buildingSearch && (
+                  <button
+                    aria-label="Clear building search"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setBuildingSearch("");
+                    }}
+                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                  >
+                    &#x2715;
+                  </button>
+                )}
+                {filteredBuildings.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4" role="alert" aria-live="polite">No buildings found</p>
+                ) : (
+                  filteredBuildings.map((building) => (
+                    <div
+                      key={building}
+                      className="p-3 hover:bg-blue-50 cursor-pointer rounded-lg transition-colors"
+                      onClick={() => handleBuildingChange(building)}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleBuildingChange(building);
+                        }
+                      }}
+                      role="option"
+                      aria-selected={selectedBuilding === building}
+                    >
+                      {building}
+                    </div>
+                  ))
+                )}
                       </div>
                     </div>
                   )}
@@ -669,26 +736,48 @@ export default function StaffDashboard() {
                   {showLocationDropdown && selectedBuilding && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl z-50 border border-gray-200 max-h-60 overflow-y-auto">
                       <div className="p-2">
-                        <Input
-                          placeholder="Search locations..."
-                          value={locationSearch}
-                          onChange={(e) => setLocationSearch(e.target.value)}
-                          className="mb-2 rounded-lg"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        {filteredLocations.length === 0 ? (
-                          <p className="text-gray-500 text-center py-4">No locations found</p>
-                        ) : (
-                          filteredLocations.map((room) => (
-                            <div
-                              key={`${room.roomNo}-${room.fullName}`}
-                              className="p-3 hover:bg-blue-50 cursor-pointer rounded-lg transition-colors"
-                              onClick={() => handleLocationChange(room.fullName)}
-                            >
-                              <div className="font-medium">{room.fullName}</div>
-                            </div>
-                          ))
-                        )}
+                <Input
+                  placeholder="Search locations..."
+                  value={locationSearch}
+                  onChange={(e) => setLocationSearch(e.target.value)}
+                  className="mb-2 rounded-lg"
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Search locations"
+                />
+                {locationSearch && (
+                  <button
+                    aria-label="Clear location search"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLocationSearch("");
+                    }}
+                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                  >
+                    &#x2715;
+                  </button>
+                )}
+                {filteredLocations.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4" role="alert" aria-live="polite">No locations found</p>
+                ) : (
+                  filteredLocations.map((room) => (
+                    <div
+                      key={`${room.roomNo}-${room.fullName}`}
+                      className="p-3 hover:bg-blue-50 cursor-pointer rounded-lg transition-colors"
+                      onClick={() => handleLocationChange(room.fullName)}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleLocationChange(room.fullName);
+                        }
+                      }}
+                      role="option"
+                      aria-selected={selectedLocation === room.fullName}
+                    >
+                      <div className="font-medium">{room.fullName}</div>
+                    </div>
+                  ))
+                )}
                       </div>
                     </div>
                   )}
