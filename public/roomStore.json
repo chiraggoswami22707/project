@@ -1,0 +1,1888 @@
+[
+  {
+    "Building Name": "ACADEMIC BLOCK A BASEMENT",
+    "Room No.": "A0001",
+    "Lab/Room Name": "Central Library"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A001",
+    "Lab/Room Name": "Director Office"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A002",
+    "Lab/Room Name": "HR Section"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A003",
+    "Lab/Room Name": "Account Section"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A004",
+    "Lab/Room Name": "Student Outreach"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A005",
+    "Lab/Room Name": "Conference Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A006",
+    "Lab/Room Name": "Computer Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A007",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A008",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         GROUND FLOOR",
+    "Room No.": "A009",
+    "Lab/Room Name": "Computer Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A101",
+    "Lab/Room Name": "Physics Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A102",
+    "Lab/Room Name": "Server Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A103",
+    "Lab/Room Name": "Electronics Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A104",
+    "Lab/Room Name": "Staff Room "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A105",
+    "Lab/Room Name": "Computer Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A106",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A    FIRST FLOOR",
+    "Room No.": "A107",
+    "Lab/Room Name": "Evaluation Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         SECOND FLOOR",
+    "Room No.": "A201",
+    "Lab/Room Name": "Exam Cell"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK A         SECOND FLOOR",
+    "Room No.": "A202",
+    "Lab/Room Name": "SOE Office"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B GROUND FLOOR",
+    "Room No.": "B001",
+    "Lab/Room Name": "Fluid Machinary Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B GROUND FLOOR",
+    "Room No.": "B002",
+    "Lab/Room Name": "Fluid Mechanics Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B GROUND FLOOR",
+    "Room No.": "B003",
+    "Lab/Room Name": "Applied Thermodynamics /Heat and Mass Transfer Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B  FIRST FLOOR",
+    "Room No.": "B101",
+    "Lab/Room Name": "VLSI Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B  FIRST FLOOR",
+    "Room No.": "B102",
+    "Lab/Room Name": "Computer Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B  FIRST FLOOR",
+    "Room No.": "B103",
+    "Lab/Room Name": "High Performance Computing Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B       SECOND FLOOR",
+    "Room No.": "B201",
+    "Lab/Room Name": "Sai Sandhya Hall"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK B       SECOND FLOOR",
+    "Room No.": "B202",
+    "Lab/Room Name": "CCTV Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C GROUND FLOOR",
+    "Room No.": "C001",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C GROUND FLOOR",
+    "Room No.": "C002",
+    "Lab/Room Name": "Civil Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C GROUND FLOOR",
+    "Room No.": "C003",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C GROUND FLOOR",
+    "Room No.": "C004",
+    "Lab/Room Name": "Seminar Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    FIRST FLOOR",
+    "Room No.": "C101",
+    "Lab/Room Name": "Computer Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    FIRST FLOOR",
+    "Room No.": "C102",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    FIRST FLOOR",
+    "Room No.": "C103",
+    "Lab/Room Name": "Electronics Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    FIRST FLOOR",
+    "Room No.": "C104",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    SECOND FLOOR",
+    "Room No.": "C201",
+    "Lab/Room Name": "Computer Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    SECOND FLOOR",
+    "Room No.": "C202",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    SECOND FLOOR",
+    "Room No.": "C203",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    SECOND FLOOR",
+    "Room No.": "C204",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C301",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C302",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C303",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C304",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C305",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK C    THIRD FLOOR",
+    "Room No.": "C306",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0001",
+    "Lab/Room Name": "Girls Common Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0002",
+    "Lab/Room Name": "Human Anatomy and Physiology Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0003",
+    "Lab/Room Name": "Pharmacology lab I"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0004",
+    "Lab/Room Name": "Pharmaceutical Analysis lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0005",
+    "Lab/Room Name": "Pharmaceutical Chemistry Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0006",
+    "Lab/Room Name": "Pharmaceutics Lab II"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0007",
+    "Lab/Room Name": "Pharmaceutics Lab I"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0008",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0009",
+    "Lab/Room Name": "Classroom "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0010",
+    "Lab/Room Name": "Pharmacy Store Room "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-B11",
+    "Lab/Room Name": "Electricity Panel Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D BASEMENT",
+    "Room No.": "D-0012",
+    "Lab/Room Name": "Pharmacognosy Lab 1"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D001",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D002",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D003",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D004",
+    "Lab/Room Name": "Seminar Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D005",
+    "Lab/Room Name": "Seminar Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D006",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D007",
+    "Lab/Room Name": "Central Instrumentation Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D GROUND FLOOR",
+    "Room No.": "D008",
+    "Lab/Room Name": "Pharmacy Machine Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D101",
+    "Lab/Room Name": "Pharmaceutics Lab 3"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D102",
+    "Lab/Room Name": "Pharmacognosy Lab 2"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D103",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D104",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D105",
+    "Lab/Room Name": "Chemistry Lab 2"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D     FIRST FLOOR",
+    "Room No.": "D106",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D201",
+    "Lab/Room Name": "Community Pharmacy Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D202",
+    "Lab/Room Name": "Pharmacology lab 2"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D203",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D204",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D205",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D206",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D207",
+    "Lab/Room Name": "Staff Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D208",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D SECOND FLOOR",
+    "Room No.": "D209",
+    "Lab/Room Name": "Staff Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK D    THIRD FLOOR",
+    "Room No.": "D301",
+    "Lab/Room Name": "Auditorium"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0001",
+    "Lab/Room Name": "Common Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0002",
+    "Lab/Room Name": "Community Health Nursing Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0003",
+    "Lab/Room Name": "Faculty Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0004",
+    "Lab/Room Name": "Nutrition Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0005",
+    "Lab/Room Name": "MEETING ROOM"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0006",
+    "Lab/Room Name": "Principal Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0007",
+    "Lab/Room Name": "VICE PRINCIPAL ROOM"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0008",
+    "Lab/Room Name": "Faculty Room"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E BASEMENT",
+    "Room No.": "E-0009",
+    "Lab/Room Name": "Pre clinical science Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E GROUND FLOOR",
+    "Room No.": "E001",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E GROUND FLOOR",
+    "Room No.": "E002",
+    "Lab/Room Name": "Advance skill Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E GROUND FLOOR",
+    "Room No.": "E003",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E GROUND FLOOR",
+    "Room No.": "E004",
+    "Lab/Room Name": "Obstetrics & Gynaecology Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    FIRST FLOOR",
+    "Room No.": "E101",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    FIRST FLOOR",
+    "Room No.": "E102",
+    "Lab/Room Name": "Child Health Nursing Lab"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    FIRST FLOOR",
+    "Room No.": "E103",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    FIRST FLOOR",
+    "Room No.": "E104",
+    "Lab/Room Name": "Computer Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    SECOND FLOOR",
+    "Room No.": "E201",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    SECOND FLOOR",
+    "Room No.": "E202",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    SECOND FLOOR",
+    "Room No.": "E203",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    SECOND FLOOR",
+    "Room No.": "E204",
+    "Lab/Room Name": "Computer Lab "
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    THIRD FLOOR",
+    "Room No.": "E301",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    THIRD FLOOR",
+    "Room No.": "E302",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    THIRD FLOOR",
+    "Room No.": "E303",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    THIRD FLOOR",
+    "Room No.": "E304",
+    "Lab/Room Name": "Lecture theatre"
+  },
+  {
+    "Building Name": "ACADEMIC BLOCK E    THIRD FLOOR",
+    "Room No.": "E305",
+    "Lab/Room Name": "Classroom"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG13",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG14",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG15",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG16",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF13",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF14",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF15",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF16",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS13",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS14",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS15",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS16",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "FT1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "FT2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "FT3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "FS4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "FS12",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "FS13",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Shiwalik Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "FS14",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Ground Floor",
+    "Room No": "CG1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Ground Floor",
+    "Room No": "CG2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Ground Floor",
+    "Room No": "CG3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Ground Floor",
+    "Room No": "CG4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Ground Floor",
+    "Room No": "CG5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Ground Floor",
+    "Room No": "CG6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Ground Floor",
+    "Room No": "CG7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Ground Floor",
+    "Room No": "CG8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - First Floor",
+    "Room No": "CF1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - First Floor",
+    "Room No": "CF2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - First Floor",
+    "Room No": "CF3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - First Floor",
+    "Room No": "CF4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - First Floor",
+    "Room No": "CF5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - First Floor",
+    "Room No": "CF6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - First Floor",
+    "Room No": "CF7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - First Floor",
+    "Room No": "CF8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Second Floor",
+    "Room No": "CS1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Second Floor",
+    "Room No": "CS2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Second Floor",
+    "Room No": "CS3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Second Floor",
+    "Room No": "CS4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Second Floor",
+    "Room No": "CS5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Second Floor",
+    "Room No": "CS6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Second Floor",
+    "Room No": "CS7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Second Floor",
+    "Room No": "CS8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Third Floor",
+    "Room No": "CT1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Third Floor",
+    "Room No": "CT2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Third Floor",
+    "Room No": "CT3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Third Floor",
+    "Room No": "CT4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Third Floor",
+    "Room No": "CT5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Third Floor",
+    "Room No": "CT6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Third Floor",
+    "Room No": "CT7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "C Block - Third Floor",
+    "Room No": "CT8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Ground Floor",
+    "Room No": "DG1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Ground Floor",
+    "Room No": "DG2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Ground Floor",
+    "Room No": "DG3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Ground Floor",
+    "Room No": "DG4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Ground Floor",
+    "Room No": "DG5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Ground Floor",
+    "Room No": "DG6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Ground Floor",
+    "Room No": "DG7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Ground Floor",
+    "Room No": "DG8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - First Floor",
+    "Room No": "DF1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - First Floor",
+    "Room No": "DF2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - First Floor",
+    "Room No": "DF3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - First Floor",
+    "Room No": "DF4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - First Floor",
+    "Room No": "DF5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - First Floor",
+    "Room No": "DF6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - First Floor",
+    "Room No": "DF7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - First Floor",
+    "Room No": "DF8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Second Floor",
+    "Room No": "DS1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Second Floor",
+    "Room No": "DS2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Second Floor",
+    "Room No": "DS3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Second Floor",
+    "Room No": "DS4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Second Floor",
+    "Room No": "DS5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Second Floor",
+    "Room No": "DS6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Second Floor",
+    "Room No": "DS7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Second Floor",
+    "Room No": "DS8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Third Floor",
+    "Room No": "DT1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Third Floor",
+    "Room No": "DT2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Third Floor",
+    "Room No": "DT3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Third Floor",
+    "Room No": "DT4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Third Floor",
+    "Room No": "DT5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "D Block - Third Floor",
+    "Room No": "DT6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - Ground Floor",
+    "Room No": "EG1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - Ground Floor",
+    "Room No": "EG2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - Ground Floor",
+    "Room No": "EG3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - Ground Floor",
+    "Room No": "EG4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - First Floor",
+    "Room No": "EF1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - First Floor",
+    "Room No": "EF2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - First Floor",
+    "Room No": "EF3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - First Floor",
+    "Room No": "EF4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - Second Floor",
+    "Room No": "ES1",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - Second Floor",
+    "Room No": "ES2",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - Second Floor",
+    "Room No": "ES3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - Second Floor",
+    "Room No": "ES4",
+    "Room Type": "Hostel Room"
+  },
+
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - Third Floor",
+    "Room No": "ET3",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Nanda Devi Hostel",
+    "Floor\/Block": "E Block - Third Floor",
+    "Room No": "ET4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG9",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG10",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG11",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Ground Floor",
+    "Room No": "FG12",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF9",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF10",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF11",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "First Floor",
+    "Room No": "FF12",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS9",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS10",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS11",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Second Floor",
+    "Room No": "FS12",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "ET4",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "ET5",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "ET6",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "ET7",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "ET8",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "ET9",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Dunagiri Hostel",
+    "Floor\/Block": "Third Floor",
+    "Room No": "ET10",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "Ground Floor",
+    "Room No": "101",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "Ground Floor",
+    "Room No": "102",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "Ground Floor",
+    "Room No": "103",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "Ground Floor",
+    "Room No": "104",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "Ground Floor",
+    "Room No": "105",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "Ground Floor",
+    "Room No": "106",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "First Floor",
+    "Room No": "201",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "First Floor",
+    "Room No": "202",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "First Floor",
+    "Room No": "203",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "First Floor",
+    "Room No": "204",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "First Floor",
+    "Room No": "205",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "First Floor",
+    "Room No": "206",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "Second Floor",
+    "Room No": "301",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Chandra Hostel",
+    "Floor/Block": "Second Floor",
+    "Room No": "302",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "11",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "12",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "13",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "14",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "15",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "16",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "17",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "18",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "19",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "20",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "21",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "22",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "23",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "24",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "25",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "26",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "27",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "A Block",
+    "Room No": "28",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "29",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "30",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "31",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "32",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "33",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "34",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "35",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "36",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "37",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "38",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "39",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "40",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "41",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "42",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "43",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "44",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "45",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "B Block",
+    "Room No": "46",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "YRO Cottage",
+    "Room No": "47",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "YRO Cottage",
+    "Room No": "48",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "YRO Cottage",
+    "Room No": "49",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "YRO Cottage",
+    "Room No": "50",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "YRO Cottage",
+    "Room No": "51",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "YRO Cottage",
+    "Room No": "52",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "YRO Cottage",
+    "Room No": "53",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "YRO Cottage",
+    "Room No": "54",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "YRO Cottage",
+    "Room No": "55",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Sattal Hostel",
+    "Floor/Block": "YRO Cottage",
+    "Room No": "56",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "301",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "302",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "303",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "304",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "305",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "306",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "307",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "308",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "309",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "310",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "311",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "312",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "313",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "314",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "315",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "316",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "317",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "318",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "319",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "320",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "321",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "322",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "323",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "324",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "325",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "326",
+    "Room Type": "Hostel Room"
+  },
+  {
+    "Hostel": "Gautam Hostel",
+    "Floor/Block": "Third Floor",
+    "Room No": "327",
+    "Room Type": "Hostel Room"
+  }
+]
