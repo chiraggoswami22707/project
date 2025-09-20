@@ -621,7 +621,7 @@ export default function MaintenanceDashboard() {
 
       {/* Tabs */}
       <div className="flex justify-center mt-8">
-        <div className="flex bg-[#ececec] rounded-2xl overflow-hidden w-[700px]">
+        <div className="flex bg-[#ececec] rounded-2xl overflow-hidden w-full max-w-4xl">
           <button
             className={`flex-1 py-2 text-lg font-semibold transition-all ${activeTab === "Overview"
                 ? "bg-white text-black shadow"
@@ -662,7 +662,7 @@ export default function MaintenanceDashboard() {
               <div className="text-sm text-gray-500 mb-6">
                 Manage and resolve maintenance requests from students and staff
               </div>
-              <div className="grid grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 <div className="p-4 rounded-xl bg-[#f7f8fa] flex flex-col items-center">
                   <span className="font-bold text-2xl">{total}</span>
                   <span className="text-gray-500">Total Complaints</span>

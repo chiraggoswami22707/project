@@ -27,7 +27,7 @@ const iconMap = {
 
 export default function CategoryGrid({ categories, complaintCounts, onCategorySelect }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
       {categories.map((cat) => {
         const count = complaintCounts[cat.name] || 0;
         const countLabel = count === 1 ? "complaint" : "complaints";

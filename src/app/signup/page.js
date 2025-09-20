@@ -108,17 +108,18 @@ export default function SignupPage() {
         <div className="absolute inset-0 bg-black/20" />
       </div>
 
-      <div className="relative z-10 flex items-center justify-end min-h-screen px-6">
+      <div className="relative z-10 flex items-center justify-center min-h-screen px-6">
         <form
           onSubmit={handleSignup}
-          className="flex flex-col gap-5 bg-white/50 p-8 rounded-lg shadow-2xl w-full max-w-sm border border-gray-200"
+          className="flex flex-col gap-5 bg-white/50 p-6 sm:p-8 rounded-lg shadow-2xl w-full max-w-xs sm:max-w-sm border border-gray-200"
         >
           <div className="flex justify-center mb-4">
             <Image
               src="https://www.italcoholic.in/wp-content/uploads/2017/01/geu.png"
               alt="University Logo"
-              width={450}
-              height={80}
+              width={200}
+              height={100}
+              className="w-full max-w-xs h-auto"
               priority
             />
           </div>
